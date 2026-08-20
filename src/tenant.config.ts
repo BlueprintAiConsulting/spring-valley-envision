@@ -20,3 +20,4 @@ export const TENANT = {
   repConsultCopy: '',
   footerAttribution: 'Powered by Blueprint AI',
 };
+// Spring Valley tenant deploy trigger
