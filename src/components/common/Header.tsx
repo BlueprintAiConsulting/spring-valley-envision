@@ -26,7 +26,7 @@ const Header: React.FC<HeaderProps> = ({
           </div>
           <div className="flex flex-col min-w-0">
             <h1 className="font-[800] text-[18px] leading-none tracking-[-0.5px] text-white whitespace-nowrap">
-              BLUEPRINT<span className="text-[#3B82F6]">ENVISION</span>
+              SPRING VALLEY<span className="text-[#3B82F6]"> ROOFING</span>
             </h1>
             <span className="text-[9px] uppercase tracking-[0.2em] font-bold whitespace-nowrap mt-0.5 text-[#475569]">
               Exterior Visualizer

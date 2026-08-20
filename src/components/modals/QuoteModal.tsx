@@ -71,7 +71,7 @@ const QuoteModal: React.FC<QuoteModalProps> = ({ isOpen, onClose, leadCaptureEna
       if (visualizationImage) {
         const a = document.createElement('a');
         a.href = visualizationImage;
-        a.download = `BlueprintEnvision-${form.name.replace(/\s+/g, '-')}.png`;
+        a.download = `Spring Valley Roofing-${form.name.replace(/\s+/g, '-')}.png`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -115,7 +115,7 @@ const QuoteModal: React.FC<QuoteModalProps> = ({ isOpen, onClose, leadCaptureEna
             {/* Modal Header */}
             <div className="bg-[#0A0E17] border-b border-[#1E293B] px-6 py-4 flex items-center justify-between shrink-0">
               <div>
-                <div className="text-xs font-bold text-[#60A5FA] uppercase tracking-widest">BlueprintEnvision</div>
+                <div className="text-xs font-bold text-[#60A5FA] uppercase tracking-widest">Spring Valley Roofing</div>
                 <div className="text-base font-bold text-[#E2E8F0] mt-0.5">Request a Free Quote</div>
               </div>
               <button onClick={handleClose} className="p-2 rounded-full text-[#64748B] hover:text-white hover:bg-[#1E293B] transition-colors">
@@ -141,7 +141,7 @@ const QuoteModal: React.FC<QuoteModalProps> = ({ isOpen, onClose, leadCaptureEna
                     Contact Blueprint AI Consulting to upgrade and start receiving leads directly to your inbox.
                   </p>
                   <a
-                    href="mailto:blueprintaiconsulting@gmail.com?subject=BlueprintEnvision%20Upgrade%20Inquiry"
+                    href="mailto:info@springvalleyroofing.com?subject=Spring Valley Roofing%20Upgrade%20Inquiry"
                     className="mt-6 px-5 py-2.5 rounded-lg bg-[#1E3A8A] hover:bg-[#1D4ED8] text-[#60A5FA] text-xs font-bold uppercase tracking-widest transition-colors"
                   >
                     Contact Us to Upgrade

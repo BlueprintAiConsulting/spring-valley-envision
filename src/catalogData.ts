@@ -1,6 +1,6 @@
 /**
- * BlueprintEnvision — Generic Siding Catalog
- * All product names and color values are original to BlueprintEnvision.
+ * Spring Valley Roofing — Generic Siding Catalog
+ * All product names and color values are original to Spring Valley Roofing.
  * Hex values are independently derived approximations of common exterior color families.
  */
 

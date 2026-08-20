@@ -22,7 +22,7 @@ const PLANS = [
       'Quick Mode rendering',
       'Lead capture form',
       'Email notifications',
-      'BlueprintEnvision branding',
+      'Spring Valley Roofing branding',
     ],
     cta: 'Get Started',
     popular: false,
@@ -106,7 +106,7 @@ const FAQS = [
   { q: 'How accurate are the visualizations?', a: 'Our Gemini AI produces photorealistic renders that preserve the home\'s geometry, lighting, and shadows. While results are approximations intended for inspiration, contractors report they\'re accurate enough to close deals on the spot.' },
   { q: 'Does the homeowner need to create an account?', a: 'No. The visualizer is zero-friction — no signup, no login. They upload a photo, pick colors, and request a quote. You capture the lead.' },
   { q: 'Can I use my own branding?', a: 'Yes! Pro and Enterprise plans let you add your company name, logo, colors, and even your own domain. It looks like your own custom-built tool.' },
-  { q: 'What siding brands/colors are included?', a: 'BlueprintEnvision includes a generic catalog of 150+ colors across 4 product tiers. Enterprise customers can integrate their preferred manufacturer\'s catalog with exact color matches.' },
+  { q: 'What siding brands/colors are included?', a: 'Spring Valley Roofing includes a generic catalog of 150+ colors across 4 product tiers. Enterprise customers can integrate their preferred manufacturer\'s catalog with exact color matches.' },
   { q: 'How do leads get delivered?', a: 'Instantly via email. Each lead includes the homeowner\'s contact info, property address, and their exact design specification (colors, product lines, zone assignments).' },
   { q: 'How do I get started?', a: 'Pick a plan, enter your payment info, and you\'re up and running in under 5 minutes. Cancel anytime from your billing dashboard.' },
 ];
@@ -122,7 +122,7 @@ export default function Landing() {
 
   const handleCheckout = async (planKey: string) => {
     if (planKey === 'enterprise') {
-      window.location.href = 'mailto:drewhufnagle@gmail.com?subject=BlueprintEnvision%20Enterprise%20Inquiry';
+      window.location.href = 'mailto:info@springvalleyroofing.com?subject=Spring Valley Roofing%20Enterprise%20Inquiry';
       return;
     }
     setCheckoutLoading(planKey);
@@ -230,7 +230,7 @@ export default function Landing() {
             className="text-lg md:text-xl text-[#94A3B8] max-w-2xl mx-auto mb-10 leading-relaxed"
           >
             Give your customers a photorealistic preview of their home with new siding — in 30 seconds.
-            BlueprintEnvision is the AI-powered sales tool that turns browsers into booked jobs.
+            Spring Valley Roofing is the AI-powered sales tool that turns browsers into booked jobs.
           </motion.p>
 
           <motion.div
@@ -283,7 +283,7 @@ export default function Landing() {
           <div className="relative rounded-2xl overflow-hidden border border-[#1E293B] shadow-[0_0_60px_rgba(59,130,246,0.15)]">
             <img
               src="/og-preview.png"
-              alt="BlueprintEnvision in action"
+              alt="Spring Valley Roofing in action"
               className="w-full"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-[#060B18] via-transparent to-transparent pointer-events-none" />
@@ -531,12 +531,12 @@ export default function Landing() {
             <div className="flex items-center gap-6 text-xs text-[#64748B]">
               <a href="#" className="hover:text-[#94A3B8] transition-colors">Privacy</a>
               <a href="#" className="hover:text-[#94A3B8] transition-colors">Terms</a>
-              <a href="mailto:drewhufnagle@gmail.com" className="hover:text-[#94A3B8] transition-colors">Contact</a>
+              <a href="mailto:info@springvalleyroofing.com" className="hover:text-[#94A3B8] transition-colors">Contact</a>
             </div>
           </div>
           <div className="mt-8 pt-6 border-t border-[#1E293B] text-center">
             <p className="text-[10px] font-bold text-[#334155] uppercase tracking-widest">
-              © 2026 BlueprintEnvision. Powered by <span className="text-[#3B82F6]">Blueprint AI</span>.
+              © 2026 Spring Valley Roofing. Powered by <span className="text-[#3B82F6]">Blueprint AI</span>.
             </p>
           </div>
         </div>

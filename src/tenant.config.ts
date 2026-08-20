@@ -5,11 +5,11 @@
  * update these values and re-deploy — no other files need editing.
  */
 export const TENANT = {
-  companyName: 'Blueprint AI Consulting',
-  appName: 'BlueprintEnvision',
+  companyName: 'Spring Valley Roofing',
+  appName: 'Spring Valley Roofing Envision',
   /** Display name for the installing contractor shown in UI & emails */
-  installerName: 'Blueprint AI Consulting',
-  defaultLeadEmail: 'drewhufnagle@gmail.com',
+  installerName: 'Spring Valley Roofing',
+  defaultLeadEmail: 'info@springvalleyroofing.com',
   sidingTiers: {
     good:   { label: 'Good',   displayName: 'Horizon™',        material: 'Vinyl Siding' },
     better: { label: 'Better', displayName: 'Prestige™',       material: 'Premium Vinyl Siding' },

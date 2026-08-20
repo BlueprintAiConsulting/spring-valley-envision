@@ -16,17 +16,17 @@ const Footer: React.FC<FooterProps> = ({ onShowToS, onShowPrivacy }) => {
           <div>
             <div className="flex items-center gap-2.5 mb-4">
               <img src={`${base}logo-mark.png`} alt="Blueprint AI" className="w-7 h-7 opacity-50 grayscale hover:grayscale-0 hover:opacity-100 transition-all" />
-              <h2 className="font-bold text-xs tracking-widest text-[#64748B]">BLUEPRINT<span className="text-[#60A5FA]/60">ENVISION</span></h2>
+              <h2 className="font-bold text-xs tracking-widest text-[#64748B]">SPRING VALLEY<span className="text-[#60A5FA]/60"> ROOFING</span></h2>
             </div>
             <p className="text-[11px] text-[#64748B] leading-relaxed max-w-xs mb-4">
               AI-powered exterior visualization for contractors and homeowners. Preview roofing and accents on your home using real product colors.
             </p>
-            {/* Shiloh Roofing — Presenting Contractor */}
+            {/* Spring Valley Roofing — Presenting Contractor */}
             <div className="border-t border-[#1E293B] pt-4">
               <p className="text-[9px] font-bold uppercase tracking-[0.2em] mb-2" style={{background: 'linear-gradient(90deg, #60A5FA, #93C5FD)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent'}}>Your Contractor</p>
-              <p className="text-sm font-bold text-white tracking-wide mb-1">Shiloh Roofing</p>
-              <a href="tel:7177641269" className="block text-[11px] text-[#94A3B8] hover:text-white transition-colors mb-0.5">717-764-1269</a>
-              <a href="https://shilohroofing.com" target="_blank" rel="noopener noreferrer" className="block text-[11px] text-[#60A5FA] hover:text-white transition-colors">shilohroofing.com</a>
+              <p className="text-sm font-bold text-white tracking-wide mb-1">Spring Valley Roofing</p>
+              <a href="tel:6109485207" className="block text-[11px] text-[#94A3B8] hover:text-white transition-colors mb-0.5">610-948-5207</a>
+              <a href="https://springvalleyroofing.com" target="_blank" rel="noopener noreferrer" className="block text-[11px] text-[#60A5FA] hover:text-white transition-colors">springvalleyroofing.com</a>
             </div>
           </div>
 
@@ -64,7 +64,7 @@ const Footer: React.FC<FooterProps> = ({ onShowToS, onShowPrivacy }) => {
         {/* Bottom bar */}
         <div className="border-t border-[#1E293B] mt-6 pt-6">
           <div className="flex flex-wrap items-center justify-between gap-3 text-[9px] font-bold uppercase tracking-widest text-[#475569]">
-            <p>© {new Date().getFullYear()} Shiloh Roofing · <span className="text-[#475569]">Powered by Blueprint AI Consulting Co.</span></p>
+            <p>© {new Date().getFullYear()} Spring Valley Roofing · <span className="text-[#475569]">Powered by Blueprint AI Consulting Co.</span></p>
             <div className="flex gap-4">
               <span>v2.5</span>
             </div>

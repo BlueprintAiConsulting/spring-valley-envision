@@ -30,7 +30,7 @@ const InfoModal: React.FC<InfoModalProps> = ({ isOpen, onClose }) => {
                 <div className="w-10 h-10 rounded-lg bg-[#1E3A8A] flex items-center justify-center">
                   <Info className="w-5 h-5 text-[#60A5FA]" />
                 </div>
-                <h3 className="text-lg font-bold text-white">About BlueprintEnvision</h3>
+                <h3 className="text-lg font-bold text-white">About Spring Valley Roofing</h3>
               </div>
               <button onClick={onClose} className="text-[#94A3B8] hover:text-white transition-colors">
                 <X className="w-5 h-5" />
@@ -38,7 +38,7 @@ const InfoModal: React.FC<InfoModalProps> = ({ isOpen, onClose }) => {
             </div>
             <div className="p-6 space-y-4">
               <p className="text-[#94A3B8] text-sm leading-relaxed">
-                BlueprintEnvision is an AI-powered exterior home visualizer that lets you preview roofing colors on your home using real GAF® product colors — before committing to a purchase.
+                Spring Valley Roofing is an AI-powered exterior home visualizer that lets you preview roofing colors on your home using real GAF® product colors — before committing to a purchase.
               </p>
               <div className="space-y-3">
                 <div className="bg-[#1E293B]/60 rounded-lg p-3">
