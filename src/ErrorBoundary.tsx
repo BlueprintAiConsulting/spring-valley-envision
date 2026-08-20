@@ -92,7 +92,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
                 </svg>
               </div>
               <span style={{ fontWeight: 700, fontSize: '1.1rem', letterSpacing: '-0.02em' }}>
-                BLUEPRINT<span style={{ color: '#3B82F6' }}>AI</span>
+                SPRING VALLEY<span style={{ color: '#3B82F6' }}> ROOFING</span>
               </span>
             </div>
 

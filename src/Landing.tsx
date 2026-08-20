@@ -155,7 +155,7 @@ export default function Landing() {
               <Layout className="text-white w-4 h-4" />
             </div>
             <span className="font-bold text-lg tracking-tight">
-              BLUEPRINT<span className="text-[#3B82F6]">ENVISION</span>
+              SPRING VALLEY<span className="text-[#3B82F6]"> ROOFING</span>
             </span>
           </div>
           <div className="hidden md:flex items-center gap-8">
@@ -525,7 +525,7 @@ export default function Landing() {
                 <Layout className="text-white w-4 h-4" />
               </div>
               <span className="font-bold tracking-tight">
-                BLUEPRINT<span className="text-[#3B82F6]">ENVISION</span>
+                SPRING VALLEY<span className="text-[#3B82F6]"> ROOFING</span>
               </span>
             </div>
             <div className="flex items-center gap-6 text-xs text-[#64748B]">
