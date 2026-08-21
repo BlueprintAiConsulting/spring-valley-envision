@@ -14,7 +14,12 @@ export const PricingSettingsModal: React.FC<Props> = ({ pricing, onSave, onClose
 
   const handleChange = (key: keyof FieldPricingConfig, val: string) => {
     const num = parseFloat(val) || 0;
-    setFormState((prev) => ({ ...prev, [key]: num }));
+    if (key === 'wasteFactorPercent') {
+      setFormState((prev) => ({ ...prev, [key]: num }));
+    } else {
+      // Store in cents
+      setFormState((prev) => ({ ...prev, [key]: Math.round(num * 100) }));
+    }
   };
 
   const handleResetDefaults = () => {
@@ -67,7 +72,7 @@ export const PricingSettingsModal: React.FC<Props> = ({ pricing, onSave, onClose
                   <span className="absolute left-3 top-2.5 text-xs text-[#69727D]">$</span>
                   <input
                     type="number"
-                    value={formState.sidingTier1InstalledSq}
+                    value={formState.sidingTier1InstalledSq / 100}
                     onChange={(e) => handleChange('sidingTier1InstalledSq', e.target.value)}
                     className="w-full bg-[#0B131E] border border-[#223448] rounded-lg py-2 pl-7 pr-3 text-sm text-white focus:border-[#18A9D9] focus:outline-none"
                     required
@@ -83,7 +88,7 @@ export const PricingSettingsModal: React.FC<Props> = ({ pricing, onSave, onClose
                   <span className="absolute left-3 top-2.5 text-xs text-[#69727D]">$</span>
                   <input
                     type="number"
-                    value={formState.sidingTier2InstalledSq}
+                    value={formState.sidingTier2InstalledSq / 100}
                     onChange={(e) => handleChange('sidingTier2InstalledSq', e.target.value)}
                     className="w-full bg-[#0B131E] border border-[#223448] rounded-lg py-2 pl-7 pr-3 text-sm text-white focus:border-[#18A9D9] focus:outline-none"
                     required
@@ -99,7 +104,7 @@ export const PricingSettingsModal: React.FC<Props> = ({ pricing, onSave, onClose
                   <span className="absolute left-3 top-2.5 text-xs text-[#69727D]">$</span>
                   <input
                     type="number"
-                    value={formState.sidingTier3InstalledSq}
+                    value={formState.sidingTier3InstalledSq / 100}
                     onChange={(e) => handleChange('sidingTier3InstalledSq', e.target.value)}
                     className="w-full bg-[#0B131E] border border-[#223448] rounded-lg py-2 pl-7 pr-3 text-sm text-white focus:border-[#18A9D9] focus:outline-none"
                     required
@@ -115,7 +120,7 @@ export const PricingSettingsModal: React.FC<Props> = ({ pricing, onSave, onClose
                   <span className="absolute left-3 top-2.5 text-xs text-[#69727D]">$</span>
                   <input
                     type="number"
-                    value={formState.sidingBoardBattenInstalledSq}
+                    value={formState.sidingBoardBattenInstalledSq / 100}
                     onChange={(e) => handleChange('sidingBoardBattenInstalledSq', e.target.value)}
                     className="w-full bg-[#0B131E] border border-[#223448] rounded-lg py-2 pl-7 pr-3 text-sm text-white focus:border-[#18A9D9] focus:outline-none"
                     required
@@ -139,7 +144,7 @@ export const PricingSettingsModal: React.FC<Props> = ({ pricing, onSave, onClose
                   <span className="absolute left-3 top-2.5 text-xs text-[#69727D]">$</span>
                   <input
                     type="number"
-                    value={formState.roofingInstalledSq}
+                    value={formState.roofingInstalledSq / 100}
                     onChange={(e) => handleChange('roofingInstalledSq', e.target.value)}
                     className="w-full bg-[#0B131E] border border-[#223448] rounded-lg py-2 pl-7 pr-3 text-sm text-white focus:border-[#83C248] focus:outline-none"
                     required
@@ -155,7 +160,7 @@ export const PricingSettingsModal: React.FC<Props> = ({ pricing, onSave, onClose
                   <span className="absolute left-3 top-2.5 text-xs text-[#69727D]">$</span>
                   <input
                     type="number"
-                    value={formState.roofingProInstalledSq}
+                    value={formState.roofingProInstalledSq / 100}
                     onChange={(e) => handleChange('roofingProInstalledSq', e.target.value)}
                     className="w-full bg-[#0B131E] border border-[#223448] rounded-lg py-2 pl-7 pr-3 text-sm text-white focus:border-[#83C248] focus:outline-none"
                     required
@@ -179,7 +184,7 @@ export const PricingSettingsModal: React.FC<Props> = ({ pricing, onSave, onClose
                   <span className="absolute left-3 top-2.5 text-xs text-[#69727D]">$</span>
                   <input
                     type="number"
-                    value={formState.cornerPostEach}
+                    value={formState.cornerPostEach / 100}
                     onChange={(e) => handleChange('cornerPostEach', e.target.value)}
                     className="w-full bg-[#0B131E] border border-[#223448] rounded-lg py-2 pl-7 pr-3 text-sm text-white focus:border-[#18A9D9] focus:outline-none"
                   />
@@ -194,7 +199,7 @@ export const PricingSettingsModal: React.FC<Props> = ({ pricing, onSave, onClose
                   <span className="absolute left-3 top-2.5 text-xs text-[#69727D]">$</span>
                   <input
                     type="number"
-                    value={formState.soffitFasciaLinearFoot}
+                    value={formState.soffitFasciaLinearFoot / 100}
                     onChange={(e) => handleChange('soffitFasciaLinearFoot', e.target.value)}
                     className="w-full bg-[#0B131E] border border-[#223448] rounded-lg py-2 pl-7 pr-3 text-sm text-white focus:border-[#18A9D9] focus:outline-none"
                   />
@@ -209,7 +214,7 @@ export const PricingSettingsModal: React.FC<Props> = ({ pricing, onSave, onClose
                   <span className="absolute left-3 top-2.5 text-xs text-[#69727D]">$</span>
                   <input
                     type="number"
-                    value={formState.shutterPairInstalled}
+                    value={formState.shutterPairInstalled / 100}
                     onChange={(e) => handleChange('shutterPairInstalled', e.target.value)}
                     className="w-full bg-[#0B131E] border border-[#223448] rounded-lg py-2 pl-7 pr-3 text-sm text-white focus:border-[#18A9D9] focus:outline-none"
                   />
@@ -224,7 +229,7 @@ export const PricingSettingsModal: React.FC<Props> = ({ pricing, onSave, onClose
                   <span className="absolute left-3 top-2.5 text-xs text-[#69727D]">$</span>
                   <input
                     type="number"
-                    value={formState.gutterLinearFoot}
+                    value={formState.gutterLinearFoot / 100}
                     onChange={(e) => handleChange('gutterLinearFoot', e.target.value)}
                     className="w-full bg-[#0B131E] border border-[#223448] rounded-lg py-2 pl-7 pr-3 text-sm text-white focus:border-[#18A9D9] focus:outline-none"
                   />
@@ -239,7 +244,7 @@ export const PricingSettingsModal: React.FC<Props> = ({ pricing, onSave, onClose
                   <span className="absolute left-3 top-2.5 text-xs text-[#69727D]">$</span>
                   <input
                     type="number"
-                    value={formState.tearOffDisposalDumpster}
+                    value={formState.tearOffDisposalDumpster / 100}
                     onChange={(e) => handleChange('tearOffDisposalDumpster', e.target.value)}
                     className="w-full bg-[#0B131E] border border-[#223448] rounded-lg py-2 pl-7 pr-3 text-sm text-white focus:border-[#18A9D9] focus:outline-none"
                   />

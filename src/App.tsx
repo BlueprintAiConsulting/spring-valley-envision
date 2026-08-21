@@ -23,6 +23,8 @@ import SidingCatalog from './components/catalog/SidingCatalog';
 import RoofingCatalog from './components/catalog/RoofingCatalog';
 import AdvancedCatalog from './components/catalog/AdvancedCatalog';
 import { FieldEstimateMode } from './components/fieldEstimate/FieldEstimateMode';
+import { SpringValleyRole } from './types/auth';
+import { useAuth } from './contexts/AuthContext';
 
 // Hooks & Utils
 import { useHistory } from './hooks/useHistory';
@@ -53,6 +55,7 @@ const App: React.FC = () => {
   const [resultImage, setResultImage] = useState<string | null>(null);
   const [quickResult, setQuickResult] = useState<string | null>(null);
   const [enhancedImage, setEnhancedImage] = useState<string | null>(null);
+  const { activeRole } = useAuth();
   
   // --- MODAL STATE ---
   const [showQuoteModal, setShowQuoteModal] = useState(false);
@@ -306,6 +309,7 @@ const App: React.FC = () => {
           onBackToStudio={() => setMainView('studio')} 
           activeSidingColorName={activeSiding}
           activeRoofingColorName={activeRoof}
+          activeRole={activeRole}
         />
         <Footer 
           onShowToS={() => setShowTermsModal(true)}

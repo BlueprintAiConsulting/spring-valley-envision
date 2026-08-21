@@ -4,6 +4,7 @@ import {
   ElevationSide,
   FieldPricingConfig,
 } from '../../types/fieldEstimate';
+import { SpringValleyRole, ROLE_PERMISSIONS } from '../../types/auth';
 import {
   INITIAL_ELEVATIONS,
   DEFAULT_FIELD_PRICING,
@@ -35,12 +36,14 @@ interface Props {
   onBackToStudio?: () => void;
   activeSidingColorName?: string;
   activeRoofingColorName?: string;
+  activeRole?: SpringValleyRole;
 }
 
 export const FieldEstimateMode: React.FC<Props> = ({
   onBackToStudio,
   activeSidingColorName = 'Monogram Flagstone',
   activeRoofingColorName = 'Landmark Moire Black',
+  activeRole = 'Owner',
 }) => {
   const [elevations, setElevations] = useState<ElevationData[]>(INITIAL_ELEVATIONS);
   const [activeSide, setActiveSide] = useState<ElevationSide>('front');
@@ -58,6 +61,7 @@ export const FieldEstimateMode: React.FC<Props> = ({
     pricing.wasteFactorPercent
   );
   const projectSummary = calculateProjectSummary(elevations, pricing);
+  const permissions = ROLE_PERMISSIONS[activeRole];
 
   // Update specific fields on active elevation
   const updateActiveElevation = (updater: (prev: ElevationData) => ElevationData) => {
@@ -150,12 +154,14 @@ export const FieldEstimateMode: React.FC<Props> = ({
             >
               <Building2 className="w-3.5 h-3.5 text-[#18A9D9]" /> Load 4-Side Sample Home
             </button>
-            <button
-              onClick={() => setShowPricingModal(true)}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold text-[#D0D7DE] bg-[#0B131E] hover:bg-[#1A2838] border border-[#223448] transition-colors"
-            >
-              <Settings className="w-3.5 h-3.5 text-[#83C248]" /> Pricing Rates
-            </button>
+            {permissions.canEditEstimates && (
+              <button
+                onClick={() => setShowPricingModal(true)}
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold text-[#D0D7DE] bg-[#0B131E] hover:bg-[#1A2838] border border-[#223448] transition-colors"
+              >
+                <Settings className="w-3.5 h-3.5 text-[#83C248]" /> Pricing Rates
+              </button>
+            )}
             {onBackToStudio && (
               <button
                 onClick={onBackToStudio}
@@ -568,18 +574,24 @@ export const FieldEstimateMode: React.FC<Props> = ({
               <span className="text-[#18A9D9] font-bold">{projectSummary.totalSidingSquares} Sq Siding</span>
               <span className="text-[#69727D] mx-2">|</span>
               <span className="text-[#83C248] font-bold">{projectSummary.totalRoofSquares} Sq Roof</span>
-              <span className="text-[#69727D] mx-2">|</span>
-              <span className="text-white font-extrabold">Est. {formatDollar(projectSummary.targetTotalCost)}</span>
+              {permissions.canViewFinancials && (
+                <>
+                  <span className="text-[#69727D] mx-2">|</span>
+                  <span className="text-white font-extrabold">Est. {formatDollar(projectSummary.targetTotalCost)}</span>
+                </>
+              )}
             </div>
           </div>
 
           <div className="flex items-center gap-3">
-            <button
-              onClick={() => setShowPricingModal(true)}
-              className="px-4 py-2 rounded-xl text-xs font-semibold text-[#D0D7DE] bg-[#131F2E] hover:bg-[#1A2838] border border-[#223448] transition-colors flex items-center gap-1.5"
-            >
-              <Settings className="w-3.5 h-3.5 text-[#83C248]" /> Rates
-            </button>
+            {permissions.canEditEstimates && (
+              <button
+                onClick={() => setShowPricingModal(true)}
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-[#D0D7DE] bg-[#131F2E] hover:bg-[#1A2838] border border-[#223448] transition-colors flex items-center gap-1.5"
+              >
+                <Settings className="w-3.5 h-3.5 text-[#83C248]" /> Rates
+              </button>
+            )}
             <button
               onClick={() => setShowSummaryModal(true)}
               className="bg-gradient-to-r from-[#83C248] to-[#72AD3C] hover:from-[#93D553] hover:to-[#83C248] text-white px-6 py-2.5 rounded-xl text-xs font-extrabold transition-all shadow-[0_0_20px_rgba(131,194,72,0.3)] flex items-center gap-2"
@@ -606,6 +618,7 @@ export const FieldEstimateMode: React.FC<Props> = ({
           summary={projectSummary}
           pricing={pricing}
           onClose={() => setShowSummaryModal(false)}
+          activeRole={activeRole}
         />
       )}
     </div>

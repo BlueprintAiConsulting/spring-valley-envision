@@ -6,24 +6,24 @@ import { FieldPricingConfig, ElevationData } from '../types/fieldEstimate';
  */
 export const DEFAULT_FIELD_PRICING: FieldPricingConfig = {
   // Siding installed rate per square (Materials + Labor + Warranty)
-  sidingTier1InstalledSq: 480,       // CertainTeed MainStreet
-  sidingTier2InstalledSq: 590,       // CertainTeed Monogram Premium
-  sidingTier3InstalledSq: 880,       // CertainTeed Cedar Impressions Shakes
-  sidingBoardBattenInstalledSq: 720, // CertainTeed CedarBoards Board & Batten
+  sidingTier1InstalledSq: 48000,       // CertainTeed MainStreet
+  sidingTier2InstalledSq: 59000,       // CertainTeed Monogram Premium
+  sidingTier3InstalledSq: 88000,       // CertainTeed Cedar Impressions Shakes
+  sidingBoardBattenInstalledSq: 72000, // CertainTeed CedarBoards Board & Batten
 
   // Roofing installed rate per square (CertainTeed Integrity Roof System)
-  roofingInstalledSq: 495,           // CertainTeed Landmark
-  roofingProInstalledSq: 565,        // CertainTeed Landmark PRO
+  roofingInstalledSq: 49500,           // CertainTeed Landmark
+  roofingProInstalledSq: 56500,        // CertainTeed Landmark PRO
 
   // Trim, corners & accessories
-  cornerPostEach: 35,
-  soffitFasciaLinearFoot: 14,
-  shutterPairInstalled: 185,
-  gutterLinearFoot: 18,
+  cornerPostEach: 3500,
+  soffitFasciaLinearFoot: 1400,
+  shutterPairInstalled: 18500,
+  gutterLinearFoot: 1800,
 
   // General & site fees
-  tearOffDisposalDumpster: 950,
-  permitFeeAllowance: 350,
+  tearOffDisposalDumpster: 95000,
+  permitFeeAllowance: 35000,
 
   // Standard siding cut waste allowance
   wasteFactorPercent: 10,

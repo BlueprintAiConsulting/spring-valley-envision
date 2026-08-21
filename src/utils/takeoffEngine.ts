@@ -149,13 +149,10 @@ export function calculateProjectSummary(
   };
 }
 
-/**
- * Format currency in USD
- */
-export function formatDollar(val: number): string {
+export function formatDollar(valInCents: number): string {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
     maximumFractionDigits: 0,
-  }).format(val || 0);
+  }).format((valInCents || 0) / 100);
 }

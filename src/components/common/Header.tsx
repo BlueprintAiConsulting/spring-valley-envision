@@ -1,5 +1,7 @@
 import React from 'react';
-import { Trash2, Sparkles } from 'lucide-react';
+import { Sparkles, Trash2, UserCircle } from 'lucide-react';
+import { SpringValleyRole } from '../../types/auth';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface HeaderProps {
   hasImage: boolean;
@@ -19,6 +21,16 @@ const Header: React.FC<HeaderProps> = ({
   onViewChange,
 }) => {
   const base = import.meta.env.BASE_URL || '/';
+  const { currentUser, activeRole, logout } = useAuth();
+
+  const ROLES: SpringValleyRole[] = [
+    'Owner', 
+    'General Manager', 
+    'Sales Manager', 
+    'Salesperson', 
+    'Production Manager', 
+    'Project Manager'
+  ];
 
   return (
     <header className="border-b border-[#18A9D9]/20 bg-[#0B131E]/95 backdrop-blur-md sticky top-0 z-20 shadow-[0_1px_24px_rgba(24,169,217,0.08)]">
@@ -68,6 +80,29 @@ const Header: React.FC<HeaderProps> = ({
 
         {/* Actions */}
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          
+          {/* Auth Status & Sign Out */}
+          {currentUser && (
+            <div className="relative group mr-2">
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#131F2E] border border-[#223448] text-xs font-semibold text-[#18A9D9] cursor-pointer">
+                <UserCircle className="w-4 h-4" />
+                <span className="hidden sm:inline">{activeRole}</span>
+              </div>
+              
+              <div className="absolute right-0 top-full mt-1 w-48 bg-[#0B131E] border border-[#223448] rounded-xl shadow-2xl opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity z-50 overflow-hidden">
+                <div className="px-3 py-2 border-b border-[#223448] bg-[#0E1620]">
+                  <div className="text-[10px] font-bold text-[#9BA8B8] truncate">{currentUser.email}</div>
+                </div>
+                <button
+                  onClick={() => logout()}
+                  className="w-full text-left px-3 py-2 text-xs transition-colors text-red-400 hover:bg-[#1A2838]"
+                >
+                  Sign Out
+                </button>
+              </div>
+            </div>
+          )}
+
           {hasImage && mainView === 'studio' && (
             <button
               onClick={onStartOver}

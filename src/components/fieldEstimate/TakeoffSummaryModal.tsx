@@ -4,6 +4,7 @@ import {
   FieldPricingConfig,
   ProjectTakeoffSummary,
 } from '../../types/fieldEstimate';
+import { SpringValleyRole, ROLE_PERMISSIONS } from '../../types/auth';
 import { formatDollar } from '../../utils/takeoffEngine';
 import {
   X,
@@ -21,6 +22,7 @@ interface Props {
   summary: ProjectTakeoffSummary;
   pricing: FieldPricingConfig;
   onClose: () => void;
+  activeRole?: SpringValleyRole;
 }
 
 export const TakeoffSummaryModal: React.FC<Props> = ({
@@ -28,17 +30,19 @@ export const TakeoffSummaryModal: React.FC<Props> = ({
   summary,
   pricing,
   onClose,
+  activeRole = 'Owner',
 }) => {
   const [copied, setCopied] = useState(false);
   const [sentToCrm, setSentToCrm] = useState(false);
+  
+  const permissions = ROLE_PERMISSIONS[activeRole];
 
   const handlePrint = () => {
     window.print();
   };
 
   const handleCopyScope = () => {
-    const text = `
-SPRING VALLEY ROOFING — 4-SIDED FIELD TAKEOFF & ESTIMATE
+    let text = `SPRING VALLEY ROOFING — 4-SIDED FIELD TAKEOFF & ESTIMATE
 PA HIC #PA149822 · CertainTeed Certified Contractor
 
 PROJECT SUMMARY:
@@ -47,12 +51,13 @@ PROJECT SUMMARY:
 • Corner Posts: ${summary.totalCornersCount} ea
 • Soffit & Fascia Wrap: ${summary.totalSoffitFasciaFeet} lin ft
 • Shutters: ${summary.totalShuttersPairs} pairs
-• Seamless Gutters: ${summary.totalGuttersFeet} lin ft
+• Seamless Gutters: ${summary.totalGuttersFeet} lin ft`;
 
-ITEMIZED ESTIMATE BREAKDOWN:
-- Main Siding (Monogram installed @ $${pricing.sidingTier2InstalledSq}/sq): ${formatDollar(summary.mainSidingCost)}
-- Gable Shakes (Cedar Impressions @ $${pricing.sidingTier3InstalledSq}/sq): ${formatDollar(summary.gableShakeCost)}
-- Roofing (Landmark installed @ $${pricing.roofingInstalledSq}/sq): ${formatDollar(summary.roofingCost)}
+    if (permissions.canViewFinancials) {
+      text += `\n\nITEMIZED ESTIMATE BREAKDOWN:
+- Main Siding (Monogram installed @ ${formatDollar(pricing.sidingTier2InstalledSq)}/sq): ${formatDollar(summary.mainSidingCost)}
+- Gable Shakes (Cedar Impressions @ ${formatDollar(pricing.sidingTier3InstalledSq)}/sq): ${formatDollar(summary.gableShakeCost)}
+- Roofing (Landmark installed @ ${formatDollar(pricing.roofingInstalledSq)}/sq): ${formatDollar(summary.roofingCost)}
 - Corner Posts: ${formatDollar(summary.cornersCost)}
 - Soffit & Fascia Wrap: ${formatDollar(summary.soffitFasciaCost)}
 - Shutters: ${formatDollar(summary.shuttersCost)}
@@ -61,8 +66,8 @@ ITEMIZED ESTIMATE BREAKDOWN:
 
 TOTAL ESTIMATED PRICE:
 Target: ${formatDollar(summary.targetTotalCost)}
-Estimated Range: ${formatDollar(summary.lowEstimateCost)} – ${formatDollar(summary.highEstimateCost)}
-    `.trim();
+Estimated Range: ${formatDollar(summary.lowEstimateCost)} – ${formatDollar(summary.highEstimateCost)}`;
+    }
 
     navigator.clipboard.writeText(text);
     setCopied(true);
@@ -133,29 +138,33 @@ Estimated Range: ${formatDollar(summary.lowEstimateCost)} – ${formatDollar(sum
               </div>
             </div>
 
-            <div className="bg-[#0B131E] border border-[#223448] rounded-xl p-4 text-center print:border-gray-300 print:bg-gray-50">
-              <div className="text-xs text-[#9BA8B8] font-semibold uppercase tracking-wider mb-1 print:text-gray-500">
-                Target Estimate
-              </div>
-              <div className="text-2xl font-black text-white print:text-black">
-                {formatDollar(summary.targetTotalCost)}
-              </div>
-              <div className="text-[11px] text-[#83C248] mt-0.5 font-medium">
-                Materials & Labor Incl.
-              </div>
-            </div>
+            {permissions.canViewFinancials && (
+              <>
+                <div className="bg-[#0B131E] border border-[#223448] rounded-xl p-4 text-center print:border-gray-300 print:bg-gray-50">
+                  <div className="text-xs text-[#9BA8B8] font-semibold uppercase tracking-wider mb-1 print:text-gray-500">
+                    Target Estimate
+                  </div>
+                  <div className="text-2xl font-black text-white print:text-black">
+                    {formatDollar(summary.targetTotalCost)}
+                  </div>
+                  <div className="text-[11px] text-[#83C248] mt-0.5 font-medium">
+                    Materials & Labor Incl.
+                  </div>
+                </div>
 
-            <div className="bg-[#0B131E] border border-[#223448] rounded-xl p-4 text-center print:border-gray-300 print:bg-gray-50">
-              <div className="text-xs text-[#9BA8B8] font-semibold uppercase tracking-wider mb-1 print:text-gray-500">
-                Estimate Range
-              </div>
-              <div className="text-base font-bold text-[#D0D7DE] mt-1 print:text-black">
-                {formatDollar(summary.lowEstimateCost)} – {formatDollar(summary.highEstimateCost)}
-              </div>
-              <div className="text-[11px] text-[#69727D] mt-0.5">
-                ±8% Contingency
-              </div>
-            </div>
+                <div className="bg-[#0B131E] border border-[#223448] rounded-xl p-4 text-center print:border-gray-300 print:bg-gray-50">
+                  <div className="text-xs text-[#9BA8B8] font-semibold uppercase tracking-wider mb-1 print:text-gray-500">
+                    Estimate Range
+                  </div>
+                  <div className="text-base font-bold text-[#D0D7DE] mt-1 print:text-black">
+                    {formatDollar(summary.lowEstimateCost)} – {formatDollar(summary.highEstimateCost)}
+                  </div>
+                  <div className="text-[11px] text-[#69727D] mt-0.5">
+                    ±8% Contingency
+                  </div>
+                </div>
+              </>
+            )}
           </div>
 
           {/* 4 Elevations Visual Gallery */}
@@ -238,90 +247,92 @@ Estimated Range: ${formatDollar(summary.lowEstimateCost)} – ${formatDollar(sum
             </div>
           </div>
 
-          {/* Itemized Pricing Breakdown */}
-          <div>
-            <h3 className="text-xs font-bold text-white uppercase tracking-wider mb-3 print:text-black">
-              Itemized Materials & Labor Pricing Breakdown
-            </h3>
-            <div className="bg-[#0B131E] border border-[#223448] rounded-xl p-4 space-y-2.5 print:border-gray-300 print:bg-gray-50">
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-[#9BA8B8] print:text-gray-700">
-                  Main Siding ({summary.totalMainSidingSquares} Sq @ ${pricing.sidingTier2InstalledSq}/Sq Installed):
-                </span>
-                <span className="font-mono font-bold text-white print:text-black">{formatDollar(summary.mainSidingCost)}</span>
-              </div>
-
-              {summary.totalGableShakeSquares > 0 && (
+          {/* Itemized Pricing Breakdown (Only visible if canViewFinancials) */}
+          {permissions.canViewFinancials && (
+            <div>
+              <h3 className="text-xs font-bold text-white uppercase tracking-wider mb-3 print:text-black">
+                Itemized Materials & Labor Pricing Breakdown
+              </h3>
+              <div className="bg-[#0B131E] border border-[#223448] rounded-xl p-4 space-y-2.5 print:border-gray-300 print:bg-gray-50">
                 <div className="flex justify-between items-center text-xs">
                   <span className="text-[#9BA8B8] print:text-gray-700">
-                    Gable Accent Shakes ({summary.totalGableShakeSquares} Sq Cedar Impressions @ ${pricing.sidingTier3InstalledSq}/Sq):
+                    Main Siding ({summary.totalMainSidingSquares} Sq @ {formatDollar(pricing.sidingTier2InstalledSq)}/Sq Installed):
                   </span>
-                  <span className="font-mono font-bold text-white print:text-black">{formatDollar(summary.gableShakeCost)}</span>
+                  <span className="font-mono font-bold text-white print:text-black">{formatDollar(summary.mainSidingCost)}</span>
                 </div>
-              )}
 
-              {summary.totalRoofSquares > 0 && (
+                {summary.totalGableShakeSquares > 0 && (
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-[#9BA8B8] print:text-gray-700">
+                      Gable Accent Shakes ({summary.totalGableShakeSquares} Sq Cedar Impressions @ {formatDollar(pricing.sidingTier3InstalledSq)}/Sq):
+                    </span>
+                    <span className="font-mono font-bold text-white print:text-black">{formatDollar(summary.gableShakeCost)}</span>
+                  </div>
+                )}
+
+                {summary.totalRoofSquares > 0 && (
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-[#9BA8B8] print:text-gray-700">
+                      Roofing ({summary.totalRoofSquares} Sq Landmark @ {formatDollar(pricing.roofingInstalledSq)}/Sq Installed):
+                    </span>
+                    <span className="font-mono font-bold text-white print:text-black">{formatDollar(summary.roofingCost)}</span>
+                  </div>
+                )}
+
+                {summary.totalCornersCount > 0 && (
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-[#9BA8B8] print:text-gray-700">
+                      Outside/Inside Corner Posts ({summary.totalCornersCount} ea @ {formatDollar(pricing.cornerPostEach)}/ea):
+                    </span>
+                    <span className="font-mono font-bold text-white print:text-black">{formatDollar(summary.cornersCost)}</span>
+                  </div>
+                )}
+
+                {summary.totalSoffitFasciaFeet > 0 && (
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-[#9BA8B8] print:text-gray-700">
+                      Soffit & Fascia Aluminum Wrap ({summary.totalSoffitFasciaFeet} ft @ {formatDollar(pricing.soffitFasciaLinearFoot)}/ft):
+                    </span>
+                    <span className="font-mono font-bold text-white print:text-black">{formatDollar(summary.soffitFasciaCost)}</span>
+                  </div>
+                )}
+
+                {summary.totalShuttersPairs > 0 && (
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-[#9BA8B8] print:text-gray-700">
+                      Custom Designer Shutters ({summary.totalShuttersPairs} pairs @ {formatDollar(pricing.shutterPairInstalled)}/pair):
+                    </span>
+                    <span className="font-mono font-bold text-white print:text-black">{formatDollar(summary.shuttersCost)}</span>
+                  </div>
+                )}
+
+                {summary.totalGuttersFeet > 0 && (
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-[#9BA8B8] print:text-gray-700">
+                      Seamless 5" K-Style Gutters & Leaders ({summary.totalGuttersFeet} ft @ {formatDollar(pricing.gutterLinearFoot)}/ft):
+                    </span>
+                    <span className="font-mono font-bold text-white print:text-black">{formatDollar(summary.guttersCost)}</span>
+                  </div>
+                )}
+
                 <div className="flex justify-between items-center text-xs">
                   <span className="text-[#9BA8B8] print:text-gray-700">
-                    Roofing ({summary.totalRoofSquares} Sq Landmark @ ${pricing.roofingInstalledSq}/Sq Installed):
+                    Tear-off, Dumpster Disposal & PA Township Permit Allowance:
                   </span>
-                  <span className="font-mono font-bold text-white print:text-black">{formatDollar(summary.roofingCost)}</span>
+                  <span className="font-mono font-bold text-white print:text-black">{formatDollar(summary.siteFeesCost)}</span>
                 </div>
-              )}
 
-              {summary.totalCornersCount > 0 && (
-                <div className="flex justify-between items-center text-xs">
-                  <span className="text-[#9BA8B8] print:text-gray-700">
-                    Outside/Inside Corner Posts ({summary.totalCornersCount} ea @ ${pricing.cornerPostEach}/ea):
+                <div className="border-t border-[#223448] pt-3 mt-3 flex justify-between items-center print:border-gray-400">
+                  <span className="font-extrabold text-sm text-white print:text-black">
+                    TOTAL ESTIMATED INVESTMENT:
                   </span>
-                  <span className="font-mono font-bold text-white print:text-black">{formatDollar(summary.cornersCost)}</span>
-                </div>
-              )}
-
-              {summary.totalSoffitFasciaFeet > 0 && (
-                <div className="flex justify-between items-center text-xs">
-                  <span className="text-[#9BA8B8] print:text-gray-700">
-                    Soffit & Fascia Aluminum Wrap ({summary.totalSoffitFasciaFeet} ft @ ${pricing.soffitFasciaLinearFoot}/ft):
+                  <span className="text-lg font-black text-[#83C248] print:text-black">
+                    {formatDollar(summary.targetTotalCost)}
                   </span>
-                  <span className="font-mono font-bold text-white print:text-black">{formatDollar(summary.soffitFasciaCost)}</span>
                 </div>
-              )}
-
-              {summary.totalShuttersPairs > 0 && (
-                <div className="flex justify-between items-center text-xs">
-                  <span className="text-[#9BA8B8] print:text-gray-700">
-                    Custom Designer Shutters ({summary.totalShuttersPairs} pairs @ ${pricing.shutterPairInstalled}/pair):
-                  </span>
-                  <span className="font-mono font-bold text-white print:text-black">{formatDollar(summary.shuttersCost)}</span>
-                </div>
-              )}
-
-              {summary.totalGuttersFeet > 0 && (
-                <div className="flex justify-between items-center text-xs">
-                  <span className="text-[#9BA8B8] print:text-gray-700">
-                    Seamless 5" K-Style Gutters & Leaders ({summary.totalGuttersFeet} ft @ ${pricing.gutterLinearFoot}/ft):
-                  </span>
-                  <span className="font-mono font-bold text-white print:text-black">{formatDollar(summary.guttersCost)}</span>
-                </div>
-              )}
-
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-[#9BA8B8] print:text-gray-700">
-                  Tear-off, Dumpster Disposal & PA Township Permit Allowance:
-                </span>
-                <span className="font-mono font-bold text-white print:text-black">{formatDollar(summary.siteFeesCost)}</span>
-              </div>
-
-              <div className="border-t border-[#223448] pt-3 mt-3 flex justify-between items-center print:border-gray-400">
-                <span className="font-extrabold text-sm text-white print:text-black">
-                  TOTAL ESTIMATED INVESTMENT:
-                </span>
-                <span className="text-lg font-black text-[#83C248] print:text-black">
-                  {formatDollar(summary.targetTotalCost)}
-                </span>
               </div>
             </div>
-          </div>
+          )}
 
         </div>
 
