@@ -17,19 +17,18 @@ const Header: React.FC<HeaderProps> = ({
   const base = import.meta.env.BASE_URL || '/';
 
   return (
-    <header className="border-b border-[#3B82F6]/15 bg-[#060B18]/95 backdrop-blur-md sticky top-0 z-10 shadow-[0_1px_24px_rgba(59,130,246,0.08)]">
+    <header className="border-b border-[#18A9D9]/20 bg-[#0B131E]/95 backdrop-blur-md sticky top-0 z-10 shadow-[0_1px_24px_rgba(24,169,217,0.08)]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
-        {/* Brand — logo + wordmark */}
-        <div className="flex items-center gap-2.5 min-w-0">
-          <div className="w-9 h-9 bg-[#3B82F6] rounded-xl flex items-center justify-center shrink-0 drop-shadow-[0_0_15px_rgba(59,130,246,0.6)] animate-pulse-glow">
-            <Sparkles className="w-5 h-5 text-white" />
-          </div>
-          <div className="flex flex-col min-w-0">
-            <h1 className="font-[800] text-[18px] leading-none tracking-[-0.5px] text-white whitespace-nowrap">
-              SPRING VALLEY<span className="text-[#3B82F6]"> ROOFING</span>
-            </h1>
-            <span className="text-[9px] uppercase tracking-[0.2em] font-bold whitespace-nowrap mt-0.5 text-[#475569]">
-              Exterior Visualizer
+        {/* Brand — logo */}
+        <div className="flex items-center gap-3 min-w-0">
+          <img 
+            src={`${base}assets/logo.png`} 
+            alt="Spring Valley Roofing" 
+            className="h-8 sm:h-9 w-auto max-w-[200px] object-contain drop-shadow-[0_2px_10px_rgba(24,169,217,0.3)]" 
+          />
+          <div className="hidden md:flex flex-col min-w-0 border-l border-[#223448] pl-3">
+            <span className="text-[10px] uppercase tracking-[0.2em] font-bold whitespace-nowrap text-[#18A9D9]">
+              CertainTeed® Visualizer
             </span>
           </div>
         </div>
@@ -52,7 +51,7 @@ const Header: React.FC<HeaderProps> = ({
             disabled={!isQuoteAvailable}
             className={`px-3 sm:px-4 py-2 rounded-lg transition-all active:scale-95 text-[11px] font-bold flex items-center gap-1.5 whitespace-nowrap ${
               isQuoteAvailable
-                ? 'bg-[#3B82F6] hover:bg-[#2563EB] text-white shadow-[0_0_20px_rgba(59,130,246,0.6)]'
+                ? 'bg-[#83C248] hover:bg-[#93D553] text-white shadow-[0_0_20px_rgba(131,194,72,0.5)]'
                 : 'bg-[#1E293B] text-[#475569] cursor-not-allowed'
             }`}
           >
