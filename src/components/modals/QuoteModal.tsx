@@ -203,7 +203,7 @@ const QuoteModal: React.FC<QuoteModalProps> = ({ isOpen, onClose, leadCaptureEna
                           </div>
                           <div className="min-w-0 flex-1">
                             <p className="text-[11px] font-bold text-[#E2E8F0] leading-tight">{color.name}</p>
-                            <p className="text-[9px] text-[#64748B] mt-0.5">GAF {line.line} · {color.hex.toUpperCase()}</p>
+                            <p className="text-[9px] text-[#64748B] mt-0.5">CertainTeed {line.line} · {color.hex.toUpperCase()}</p>
                           </div>
                         </div>
                       </div>

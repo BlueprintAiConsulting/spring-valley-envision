@@ -38,12 +38,12 @@ const InfoModal: React.FC<InfoModalProps> = ({ isOpen, onClose }) => {
             </div>
             <div className="p-6 space-y-4">
               <p className="text-[#94A3B8] text-sm leading-relaxed">
-                Spring Valley Roofing is an AI-powered exterior home visualizer that lets you preview roofing colors on your home using real GAF® product colors — before committing to a purchase.
+                Spring Valley Roofing is an AI-powered exterior home visualizer that lets you preview roofing and siding colors on your home using real CertainTeed® product colors — before committing to a purchase.
               </p>
               <div className="space-y-3">
                 <div className="bg-[#1E293B]/60 rounded-lg p-3">
                   <h4 className="text-xs font-bold text-[#60A5FA] uppercase tracking-wider mb-1">Quick Mode</h4>
-                  <p className="text-[#94A3B8] text-xs leading-relaxed">Select roofing colors for primary roof, dormers, garage, and gutters, then generate a one-shot AI visualization. Best for quick previews.</p>
+                  <p className="text-[#94A3B8] text-xs leading-relaxed">Select roofing and siding colors for primary roof, siding body, gable, trim, and shutters, then generate a one-shot AI visualization. Best for quick previews.</p>
                 </div>
                 <div className="bg-[#1E293B]/60 rounded-lg p-3">
                   <h4 className="text-xs font-bold text-[#60A5FA] uppercase tracking-wider mb-1">Advanced Mode</h4>
@@ -55,7 +55,7 @@ const InfoModal: React.FC<InfoModalProps> = ({ isOpen, onClose }) => {
                 </div>
               </div>
               <p className="text-[#475569] text-[10px] leading-relaxed">
-                Color names are verified GAF® product colors. Hex values are best-effort digital approximations — physical samples are the authoritative reference.
+                Color names are verified CertainTeed® product colors. Hex values are best-effort digital approximations — physical samples are the authoritative reference.
               </p>
             </div>
           </motion.div>

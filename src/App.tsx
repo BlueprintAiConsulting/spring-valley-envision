@@ -344,7 +344,7 @@ const App: React.FC = () => {
                       <div className="w-7 h-7 bg-[#1E3A8A] text-[#60A5FA] rounded-lg flex items-center justify-center text-[10px] font-bold">01</div>
                       <div className="text-left">
                         <h2 className="text-xs font-bold uppercase tracking-wider text-[#E2E8F0]">Roofing</h2>
-                        <p className="text-[9px] text-[#64748B] mt-0.5">GAF Timberline® Series</p>
+                        <p className="text-[9px] text-[#64748B] mt-0.5">CertainTeed Landmark® Series</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
@@ -457,7 +457,7 @@ const App: React.FC = () => {
             <div className="flex items-start gap-2 px-3 py-2.5 bg-[#0A0E17] border border-[#1E293B] rounded-lg">
               <Info className="w-3 h-3 text-[#475569] shrink-0 mt-0.5" />
               <p className="text-[8.5px] text-[#475569] leading-relaxed">
-                Shingle color names are verified GAF® product colors. Hex values are best-effort approximations — <span className="text-[#64748B]">physical samples are the authoritative reference</span>.
+                Shingle color names are verified CertainTeed® product colors. Hex values are best-effort approximations — <span className="text-[#64748B]">physical samples are the authoritative reference</span>.
               </p>
             </div>
 

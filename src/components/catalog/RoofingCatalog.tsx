@@ -27,7 +27,7 @@ const RoofingCatalog: React.FC<RoofingCatalogProps> = ({
   return (
     <div className="bg-[#111827] p-4 space-y-3">
       {/* Tier picker */}
-      <div className="grid grid-cols-3 gap-1.5 bg-[#060B18] p-1 rounded-lg">
+      <div className="grid grid-cols-2 gap-1.5 bg-[#060B18] p-1 rounded-lg">
         {ROOFING_OPTIONS.map((line) => {
           const isSelectedTier = zone.selectedLine.tier === line.tier;
           return (

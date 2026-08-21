@@ -34,7 +34,7 @@ const Footer: React.FC<FooterProps> = ({ onShowToS, onShowPrivacy }) => {
           <div>
             <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#64748B] mb-4">Capabilities</h3>
             <ul className="space-y-2 text-[11px] text-[#94A3B8] font-medium">
-              <li>GAF® Roofing Visualization</li>
+              <li>CertainTeed® Roofing Visualization</li>
               <li>AI Image Enhancement</li>
               <li>Before & After Comparison</li>
               <li>Shingle Color Preview</li>
@@ -46,7 +46,7 @@ const Footer: React.FC<FooterProps> = ({ onShowToS, onShowPrivacy }) => {
             <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#64748B] mb-4">Legal</h3>
             <ul className="space-y-2.5 text-[11px] text-[#64748B] leading-relaxed">
               <li><span className="text-[#94A3B8] font-semibold">Visualization Accuracy — </span>Results are AI-generated approximations for inspiration only.</li>
-              <li><span className="text-[#94A3B8] font-semibold">Trademarks — </span>GAF® is a trademark of its respective owner. Not affiliated.</li>
+              <li><span className="text-[#94A3B8] font-semibold">Trademarks — </span>CertainTeed® is a trademark of CertainTeed LLC. Not affiliated.</li>
               <li><span className="text-[#94A3B8] font-semibold">Image Privacy — </span>Uploaded photos are processed by Google Gemini AI. Not stored beyond your session.</li>
             </ul>
           </div>
