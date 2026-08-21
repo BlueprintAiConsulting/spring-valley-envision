@@ -148,9 +148,17 @@ const App: React.FC = () => {
       const scaled = await downscaleImage(selectedImage, 1024);
       const data = await detectSections(scaled, 'image/jpeg');
       if (data.sections) {
-        setSections(data.sections);
+        const mappedSections: Section[] = data.sections.map((s, idx) => ({
+          id: `sec-${Date.now()}-${idx}`,
+          name: s.name,
+          maskData: null,
+          selectedLine: CERTAINTEED_OPTIONS[1],
+          selectedColor: CERTAINTEED_OPTIONS[1].colors[0],
+          maskTarget: s.maskTarget,
+        }));
+        setSections(mappedSections);
         setOptionalSections(data.optionalSections || []);
-        if (data.sections.length > 0) setCurrentSectionId(data.sections[0].id);
+        if (mappedSections.length > 0) setCurrentSectionId(mappedSections[0].id);
         ai.setDetectionProgress('✓ Sections defined');
       }
     } catch (e) {
