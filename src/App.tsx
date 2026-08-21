@@ -22,6 +22,7 @@ import VisualizerCanvas from './components/visualizer/VisualizerCanvas';
 import SidingCatalog from './components/catalog/SidingCatalog';
 import RoofingCatalog from './components/catalog/RoofingCatalog';
 import AdvancedCatalog from './components/catalog/AdvancedCatalog';
+import { FieldEstimateMode } from './components/fieldEstimate/FieldEstimateMode';
 
 // Hooks & Utils
 import { useHistory } from './hooks/useHistory';
@@ -45,6 +46,7 @@ const ADVANCED_ENABLED = true; // set true to re-enable Advanced Mode tab
 
 const App: React.FC = () => {
   // --- CORE STATE ---
+  const [mainView, setMainView] = useState<'studio' | 'field'>('studio');
   const [appMode, setAppMode] = useState<'quick' | 'advanced'>('quick');
   const [exteriorType, setExteriorType] = useState<'siding' | 'roofing'>(SIDING_ENABLED ? 'siding' : 'roofing');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -287,6 +289,32 @@ const App: React.FC = () => {
     }
   };
 
+  if (mainView === 'field') {
+    const activeSiding = quickZones[0]?.selectedColor?.name || 'Monogram Flagstone';
+    const activeRoof = quickRoofZones[0]?.selectedColor?.name || 'Landmark Moire Black';
+    return (
+      <div className="min-h-screen text-[#E2E8F0] font-sans antialiased overflow-x-hidden bg-transparent" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+        <Header 
+          hasImage={false} 
+          onStartOver={handleStartOver} 
+          onQuoteClick={() => setShowQuoteModal(true)}
+          isQuoteAvailable={false}
+          mainView={mainView}
+          onViewChange={setMainView}
+        />
+        <FieldEstimateMode 
+          onBackToStudio={() => setMainView('studio')} 
+          activeSidingColorName={activeSiding}
+          activeRoofingColorName={activeRoof}
+        />
+        <Footer 
+          onShowToS={() => setShowTermsModal(true)}
+          onShowPrivacy={() => setShowPrivacyModal(true)}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen text-[#E2E8F0] font-sans antialiased overflow-x-hidden bg-transparent" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
       <Header 
@@ -294,6 +322,8 @@ const App: React.FC = () => {
         onStartOver={handleStartOver} 
         onQuoteClick={() => setShowQuoteModal(true)}
         isQuoteAvailable={!!(quickResult || resultImage)}
+        mainView={mainView}
+        onViewChange={setMainView}
       />
 
       <main className="max-w-[1600px] mx-auto px-4 sm:px-6 py-4 sm:py-6">
