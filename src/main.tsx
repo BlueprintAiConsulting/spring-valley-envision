@@ -22,11 +22,9 @@ createRoot(document.getElementById('root')!).render(
             <Route
               path="/app"
               element={
-                <ProtectedRoute>
-                  <Suspense fallback={null}>
-                    <App />
-                  </Suspense>
-                </ProtectedRoute>
+                <Suspense fallback={null}>
+                  <App />
+                </Suspense>
               }
             />
           </Routes>
