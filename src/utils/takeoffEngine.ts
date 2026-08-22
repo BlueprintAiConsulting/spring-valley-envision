@@ -85,8 +85,9 @@ export function calculateProjectSummary(
   let totalSoffitFasciaFeet = 0;
   let totalShuttersPairs = 0;
   let totalGuttersFeet = 0;
+  let gableAccentCostTotal = 0;
 
-  takeoffResults.forEach((res) => {
+  takeoffResults.forEach((res, index) => {
     totalMainSidingSquares += res.mainWallSquares;
     totalGableShakeSquares += res.gableShakeSquares;
     totalSidingSquares += res.totalSidingSquares;
@@ -95,16 +96,41 @@ export function calculateProjectSummary(
     totalSoffitFasciaFeet += res.soffitFasciaFeet;
     totalShuttersPairs += res.shuttersPairs;
     totalGuttersFeet += res.guttersFeet;
+
+    // Bug 1 Fix: Calculate gable accent cost per elevation based on style
+    if (res.gableShakeSquares > 0) {
+      const elFeature = elevations[index]?.features;
+      const rate =
+        elFeature?.gableSidingStyle === 'board-batten'
+          ? (pricing.sidingBoardBattenInstalledSq || 72000)
+          : (pricing.sidingTier3InstalledSq || 88000);
+      gableAccentCostTotal += Math.round(res.gableShakeSquares * rate);
+    }
   });
 
   totalMainSidingSquares = parseFloat(totalMainSidingSquares.toFixed(1));
   totalGableShakeSquares = parseFloat(totalGableShakeSquares.toFixed(1));
   totalSidingSquares = parseFloat(totalSidingSquares.toFixed(1));
 
-  // Itemized costs
-  const mainSidingCost = Math.round(totalMainSidingSquares * pricing.sidingTier2InstalledSq); // Default Monogram Premium
-  const gableShakeCost = Math.round(totalGableShakeSquares * pricing.sidingTier3InstalledSq); // Cedar Impressions Shakes
-  const roofingCost = Math.round(totalRoofSquares * pricing.roofingInstalledSq); // Landmark
+  // Bug 2 Fix: Pick main siding rate based on selectedSidingTier (1 | 2 | 3)
+  let mainSidingRate = pricing.sidingTier2InstalledSq;
+  if (pricing.selectedSidingTier === 1) {
+    mainSidingRate = pricing.sidingTier1InstalledSq;
+  } else if (pricing.selectedSidingTier === 3) {
+    mainSidingRate = pricing.sidingTier3InstalledSq;
+  }
+  const mainSidingCost = Math.round(totalMainSidingSquares * mainSidingRate);
+
+  // Gable accent cost (summed per elevation above)
+  const gableShakeCost = gableAccentCostTotal;
+
+  // Bug 3 Fix: Pick roofing rate based on selectedRoofingTier ('standard' | 'pro')
+  const roofingRate =
+    pricing.selectedRoofingTier === 'pro'
+      ? pricing.roofingProInstalledSq
+      : pricing.roofingInstalledSq;
+  const roofingCost = Math.round(totalRoofSquares * roofingRate);
+
   const cornersCost = Math.round(totalCornersCount * pricing.cornerPostEach);
   const soffitFasciaCost = Math.round(totalSoffitFasciaFeet * pricing.soffitFasciaLinearFoot);
   const shuttersCost = Math.round(totalShuttersPairs * pricing.shutterPairInstalled);

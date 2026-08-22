@@ -5,7 +5,6 @@
 export type ElevationSide = 'front' | 'right' | 'rear' | 'left';
 
 export interface ElevationDimensions {
-  stories: number;          // 1, 1.5, 2, 2.5, 3
   wallWidthFeet: number;    // e.g. 40
   wallHeightFeet: number;   // e.g. 18 (eaves height)
   gableCount: number;       // 0, 1, 2
@@ -58,6 +57,10 @@ export interface ElevationTakeoffResult {
 }
 
 export interface FieldPricingConfig {
+  // Selected product tiers
+  selectedSidingTier: 1 | 2 | 3;
+  selectedRoofingTier: 'standard' | 'pro';
+
   // Siding materials (installed / square)
   sidingTier1InstalledSq: number;      // CertainTeed MainStreet ($480)
   sidingTier2InstalledSq: number;      // CertainTeed Monogram ($590)

@@ -33,21 +33,58 @@ export const TakeoffSummaryModal: React.FC<Props> = ({
   activeRole = 'Owner',
 }) => {
   const [copied, setCopied] = useState(false);
-  const [sentToCrm, setSentToCrm] = useState(false);
+  const [crmSent, setCrmSent] = useState(false);
   
   const permissions = ROLE_PERMISSIONS[activeRole];
+
+  const sidingName =
+    pricing.selectedSidingTier === 1
+      ? 'MainStreet'
+      : pricing.selectedSidingTier === 3
+      ? 'Cedar Impressions'
+      : 'Monogram Premium';
+
+  const roofingName =
+    pricing.selectedRoofingTier === 'pro'
+      ? 'Landmark PRO Max Def'
+      : 'CertainTeed Landmark';
+
+  const hasBoardBatten = elevations.some(
+    (e) => e.features.gableSidingStyle === 'board-batten'
+  );
+  const gableAccentName = hasBoardBatten
+    ? 'CedarBoards Board & Batten'
+    : 'Cedar Impressions Shakes';
+
+  const sidingRate =
+    pricing.selectedSidingTier === 1
+      ? pricing.sidingTier1InstalledSq
+      : pricing.selectedSidingTier === 3
+      ? pricing.sidingTier3InstalledSq
+      : pricing.sidingTier2InstalledSq;
+
+  const roofingRate =
+    pricing.selectedRoofingTier === 'pro'
+      ? pricing.roofingProInstalledSq
+      : pricing.roofingInstalledSq;
 
   const handlePrint = () => {
     window.print();
   };
 
   const handleCopyScope = () => {
+    const pitchSummary = elevations
+      .map((e) => `  • ${e.label}: ${e.features.roofPitch || '6/12'}`)
+      .join('\n');
+
     let text = `SPRING VALLEY ROOFING — 4-SIDED FIELD TAKEOFF & ESTIMATE
 PA HIC #PA149822 · CertainTeed Certified Contractor
 
 PROJECT SUMMARY:
-• Total Siding Takeoff: ${summary.totalSidingSquares} Squares (${summary.totalMainSidingSquares} Sq Monogram Main + ${summary.totalGableShakeSquares} Sq Cedar Impressions Shakes)
-• Total Roof Takeoff: ${summary.totalRoofSquares} Squares (CertainTeed Landmark)
+• Total Siding Takeoff: ${summary.totalSidingSquares} Squares (${summary.totalMainSidingSquares} Sq ${sidingName} Main + ${summary.totalGableShakeSquares} Sq ${gableAccentName})
+• Total Roof Takeoff: ${summary.totalRoofSquares} Squares (${roofingName})
+• Roof Pitch by Elevation:
+${pitchSummary}
 • Corner Posts: ${summary.totalCornersCount} ea
 • Soffit & Fascia Wrap: ${summary.totalSoffitFasciaFeet} lin ft
 • Shutters: ${summary.totalShuttersPairs} pairs
@@ -55,14 +92,15 @@ PROJECT SUMMARY:
 
     if (permissions.canViewFinancials) {
       text += `\n\nITEMIZED ESTIMATE BREAKDOWN:
-- Main Siding (Monogram installed @ ${formatDollar(pricing.sidingTier2InstalledSq)}/sq): ${formatDollar(summary.mainSidingCost)}
-- Gable Shakes (Cedar Impressions @ ${formatDollar(pricing.sidingTier3InstalledSq)}/sq): ${formatDollar(summary.gableShakeCost)}
-- Roofing (Landmark installed @ ${formatDollar(pricing.roofingInstalledSq)}/sq): ${formatDollar(summary.roofingCost)}
+- Main Siding (${sidingName} installed @ ${formatDollar(sidingRate)}/sq): ${formatDollar(summary.mainSidingCost)}
+- Gable Accents (${gableAccentName}): ${formatDollar(summary.gableShakeCost)}
+- Roofing (${roofingName} installed @ ${formatDollar(roofingRate)}/sq): ${formatDollar(summary.roofingCost)}
 - Corner Posts: ${formatDollar(summary.cornersCost)}
 - Soffit & Fascia Wrap: ${formatDollar(summary.soffitFasciaCost)}
 - Shutters: ${formatDollar(summary.shuttersCost)}
 - Seamless Gutters: ${formatDollar(summary.guttersCost)}
-- Site Disposal & PA Permits: ${formatDollar(summary.siteFeesCost)}
+- Tear-off & Dumpster Disposal: ${formatDollar(pricing.tearOffDisposalDumpster)}
+- PA Township Permit Allowance: ${formatDollar(pricing.permitFeeAllowance)}
 
 TOTAL ESTIMATED PRICE:
 Target: ${formatDollar(summary.targetTotalCost)}
@@ -75,11 +113,10 @@ Estimated Range: ${formatDollar(summary.lowEstimateCost)} – ${formatDollar(sum
   };
 
   const handleSendToCrm = () => {
-    setSentToCrm(true);
+    setCrmSent(true);
     setTimeout(() => {
-      alert("✅ Takeoff package and 4-side specifications sent to Spring Valley CRM!");
-      setSentToCrm(false);
-    }, 800);
+      setCrmSent(false);
+    }, 3000);
   };
 
   return (
@@ -122,7 +159,7 @@ Estimated Range: ${formatDollar(summary.lowEstimateCost)} – ${formatDollar(sum
                 {summary.totalSidingSquares} <span className="text-xs font-normal text-white print:text-black">Sq</span>
               </div>
               <div className="text-[11px] text-[#69727D] mt-0.5">
-                +{pricing.wasteFactorPercent}% waste factor
+                +{pricing.wasteFactorPercent}% waste ({sidingName})
               </div>
             </div>
 
@@ -134,7 +171,7 @@ Estimated Range: ${formatDollar(summary.lowEstimateCost)} – ${formatDollar(sum
                 {summary.totalRoofSquares} <span className="text-xs font-normal text-white print:text-black">Sq</span>
               </div>
               <div className="text-[11px] text-[#69727D] mt-0.5">
-                CertainTeed Landmark
+                {roofingName}
               </div>
             </div>
 
@@ -195,7 +232,7 @@ Estimated Range: ${formatDollar(summary.lowEstimateCost)} – ${formatDollar(sum
                   <div>
                     <div className="font-bold text-xs text-white print:text-black">{el.label}</div>
                     <div className="text-[11px] text-[#9BA8B8] print:text-gray-600">
-                      {summary.elevations[i]?.totalSidingSquares || 0} Sq Siding
+                      {summary.elevations[i]?.totalSidingSquares || 0} Sq Siding · Pitch: {el.features.roofPitch || '6/12'}
                     </div>
                   </div>
                 </div>
@@ -217,7 +254,7 @@ Estimated Range: ${formatDollar(summary.lowEstimateCost)} – ${formatDollar(sum
                     <th className="p-3">Deductions</th>
                     <th className="p-3">Net Wall</th>
                     <th className="p-3">Main Siding</th>
-                    <th className="p-3">Gable Shakes</th>
+                    <th className="p-3">Gable Accents</th>
                     <th className="p-3">Roof</th>
                   </tr>
                 </thead>
@@ -256,7 +293,7 @@ Estimated Range: ${formatDollar(summary.lowEstimateCost)} – ${formatDollar(sum
               <div className="bg-[#0B131E] border border-[#223448] rounded-xl p-4 space-y-2.5 print:border-gray-300 print:bg-gray-50">
                 <div className="flex justify-between items-center text-xs">
                   <span className="text-[#9BA8B8] print:text-gray-700">
-                    Main Siding ({summary.totalMainSidingSquares} Sq @ {formatDollar(pricing.sidingTier2InstalledSq)}/Sq Installed):
+                    Main Siding ({summary.totalMainSidingSquares} Sq {sidingName} @ {formatDollar(sidingRate)}/Sq Installed):
                   </span>
                   <span className="font-mono font-bold text-white print:text-black">{formatDollar(summary.mainSidingCost)}</span>
                 </div>
@@ -264,7 +301,7 @@ Estimated Range: ${formatDollar(summary.lowEstimateCost)} – ${formatDollar(sum
                 {summary.totalGableShakeSquares > 0 && (
                   <div className="flex justify-between items-center text-xs">
                     <span className="text-[#9BA8B8] print:text-gray-700">
-                      Gable Accent Shakes ({summary.totalGableShakeSquares} Sq Cedar Impressions @ {formatDollar(pricing.sidingTier3InstalledSq)}/Sq):
+                      Gable Accents ({summary.totalGableShakeSquares} Sq {gableAccentName}):
                     </span>
                     <span className="font-mono font-bold text-white print:text-black">{formatDollar(summary.gableShakeCost)}</span>
                   </div>
@@ -273,7 +310,7 @@ Estimated Range: ${formatDollar(summary.lowEstimateCost)} – ${formatDollar(sum
                 {summary.totalRoofSquares > 0 && (
                   <div className="flex justify-between items-center text-xs">
                     <span className="text-[#9BA8B8] print:text-gray-700">
-                      Roofing ({summary.totalRoofSquares} Sq Landmark @ {formatDollar(pricing.roofingInstalledSq)}/Sq Installed):
+                      Roofing ({summary.totalRoofSquares} Sq {roofingName} @ {formatDollar(roofingRate)}/Sq Installed):
                     </span>
                     <span className="font-mono font-bold text-white print:text-black">{formatDollar(summary.roofingCost)}</span>
                   </div>
@@ -317,9 +354,16 @@ Estimated Range: ${formatDollar(summary.lowEstimateCost)} – ${formatDollar(sum
 
                 <div className="flex justify-between items-center text-xs">
                   <span className="text-[#9BA8B8] print:text-gray-700">
-                    Tear-off, Dumpster Disposal & PA Township Permit Allowance:
+                    Tear-off & Dumpster Disposal:
                   </span>
-                  <span className="font-mono font-bold text-white print:text-black">{formatDollar(summary.siteFeesCost)}</span>
+                  <span className="font-mono font-bold text-white print:text-black">{formatDollar(pricing.tearOffDisposalDumpster)}</span>
+                </div>
+
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-[#9BA8B8] print:text-gray-700">
+                    PA Township Permit Allowance:
+                  </span>
+                  <span className="font-mono font-bold text-white print:text-black">{formatDollar(pricing.permitFeeAllowance)}</span>
                 </div>
 
                 <div className="border-t border-[#223448] pt-3 mt-3 flex justify-between items-center print:border-gray-400">
@@ -363,10 +407,21 @@ Estimated Range: ${formatDollar(summary.lowEstimateCost)} – ${formatDollar(sum
             </button>
             <button
               onClick={handleSendToCrm}
-              className="flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-[#83C248] to-[#72AD3C] hover:from-[#93D553] hover:to-[#83C248] transition-all shadow-md"
+              className={`flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-xs font-bold text-white transition-all shadow-md ${
+                crmSent
+                  ? 'bg-[#10B981] hover:bg-[#059669]'
+                  : 'bg-gradient-to-r from-[#83C248] to-[#72AD3C] hover:from-[#93D553] hover:to-[#83C248]'
+              }`}
             >
-              {sentToCrm ? <CheckCircle2 className="w-4 h-4 animate-bounce" /> : <Send className="w-4 h-4" />}
-              {sentToCrm ? 'Sending...' : 'Send Takeoff to CRM'}
+              {crmSent ? (
+                <>
+                  <CheckCircle2 className="w-4 h-4" /> Takeoff Sent to CRM!
+                </>
+              ) : (
+                <>
+                  <Send className="w-4 h-4" /> Send Takeoff to CRM
+                </>
+              )}
             </button>
           </div>
         </div>

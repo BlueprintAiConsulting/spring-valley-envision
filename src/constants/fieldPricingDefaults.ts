@@ -5,6 +5,10 @@ import { FieldPricingConfig, ElevationData } from '../types/fieldEstimate';
  * (West Chester & Pottstown, PA Region)
  */
 export const DEFAULT_FIELD_PRICING: FieldPricingConfig = {
+  // Selected product tiers
+  selectedSidingTier: 2,
+  selectedRoofingTier: 'standard',
+
   // Siding installed rate per square (Materials + Labor + Warranty)
   sidingTier1InstalledSq: 48000,       // CertainTeed MainStreet
   sidingTier2InstalledSq: 59000,       // CertainTeed Monogram Premium
@@ -41,7 +45,6 @@ export const INITIAL_ELEVATIONS: ElevationData[] = [
     renderedUrl: null,
     isGenerating: false,
     dimensions: {
-      stories: 2,
       wallWidthFeet: 36,
       wallHeightFeet: 18,
       gableCount: 1,
@@ -71,7 +74,6 @@ export const INITIAL_ELEVATIONS: ElevationData[] = [
     renderedUrl: null,
     isGenerating: false,
     dimensions: {
-      stories: 2,
       wallWidthFeet: 28,
       wallHeightFeet: 18,
       gableCount: 1,
@@ -101,7 +103,6 @@ export const INITIAL_ELEVATIONS: ElevationData[] = [
     renderedUrl: null,
     isGenerating: false,
     dimensions: {
-      stories: 2,
       wallWidthFeet: 36,
       wallHeightFeet: 18,
       gableCount: 0,
@@ -131,7 +132,6 @@ export const INITIAL_ELEVATIONS: ElevationData[] = [
     renderedUrl: null,
     isGenerating: false,
     dimensions: {
-      stories: 2,
       wallWidthFeet: 28,
       wallHeightFeet: 18,
       gableCount: 1,
