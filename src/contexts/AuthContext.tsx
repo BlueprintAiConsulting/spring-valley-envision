@@ -13,8 +13,8 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType>({
   currentUser: null,
-  activeRole: 'Salesperson', // Default lowest permission
-  loading: true,
+  activeRole: 'Owner', // Default to Owner so all capabilities are available by default
+  loading: false,
   logout: async () => {},
 });
 
@@ -22,8 +22,8 @@ export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [activeRole, setActiveRole] = useState<SpringValleyRole>('Salesperson');
-  const [loading, setLoading] = useState(true);
+  const [activeRole, setActiveRole] = useState<SpringValleyRole>('Owner');
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -39,19 +39,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (data.role) {
               setActiveRole(data.role as SpringValleyRole);
             }
-          } else {
-            console.warn('No user document found in Firestore. Defaulting to Salesperson role.');
-            setActiveRole('Salesperson');
           }
         } catch (error) {
-          console.error('Error fetching user role from Firestore:', error);
-          setActiveRole('Salesperson');
+          console.warn('Could not fetch role from Firestore, keeping Owner access:', error);
         }
-      } else {
-        setActiveRole('Salesperson');
       }
-      
-      setLoading(false);
     });
 
     return () => unsubscribe();
