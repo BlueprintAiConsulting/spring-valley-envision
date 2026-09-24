@@ -16,12 +16,13 @@ import Stripe from 'stripe';
 import { defineSecret } from 'firebase-functions/params';
 
 // ── Secrets (set via `firebase functions:secrets:set`) ──────────────────────
+// GEMINI_API_KEY is the only one the visualizer needs, so it is the only one
+// declared here — declaring a secret makes it mandatory at deploy time, and
+// requiring unset Resend/Stripe secrets blocked deploys entirely.
+// The Resend and Stripe routes already read process.env directly and degrade
+// on their own (email is skipped, billing returns 503), so leaving them
+// undeclared costs nothing and keeps the visualizer deployable.
 const geminiApiKey = defineSecret('GEMINI_API_KEY');
-const resendApiKey = defineSecret('RESEND_API_KEY');
-const stripeSecretKey = defineSecret('STRIPE_SECRET_KEY');
-const stripeWebhookSecret = defineSecret('STRIPE_WEBHOOK_SECRET');
-const leadEmail = defineSecret('LEAD_EMAIL');
-const resendFrom = defineSecret('RESEND_FROM');
 
 // ── Express app ─────────────────────────────────────────────────────────────
 const app = express();
@@ -33,6 +34,10 @@ const allowedOrigins = [
   'http://localhost:3001',
   'http://localhost:3002',
   'https://blueprintaiconsulting.github.io',
+  'https://springvalleyroofing.com',
+  'https://www.springvalleyroofing.com',
+  'https://spring-valley-roofing.web.app',
+  'https://blueprint-envision.web.app',
   'https://blueprint-envision-platform.onrender.com' // keep old origin during migration
 ];
 
@@ -71,6 +76,9 @@ const withTimeout = <T>(promise: Promise<T>, ms: number, label: string): Promise
     promise,
     new Promise<T>((_, reject) => setTimeout(() => reject(new Error(`${label} timed out after ${ms / 1000}s`)), ms)),
   ]);
+
+/** Callers may send either a bare base64 string or a full data: URL. */
+const stripDataUrl = (b64: string) => (b64.includes(',') ? b64.split(',')[1] : b64);
 
 function validateImagePayload(base64: string, mime: string = '') {
   if (!base64) throw new Error('Missing imageBase64 payload');
@@ -211,7 +219,9 @@ ${hasVerticalZones ? '7' : '6'}. PHOTOREALISM: The result must be pristine and p
 
     const response = await withTimeout(ai.models.generateContent({
       model: 'gemini-3.1-flash-image-preview',
-      contents: { parts: [{ inlineData: { data: imageBase64, mimeType: mimeType || 'image/jpeg' } }, { text: prompt }] },
+      contents: { parts: [{ inlineData: { data: stripDataUrl(imageBase64), mimeType: mimeType || 'image/jpeg' } }, { text: prompt }] },
+      // Without this the model answers with text only and no image comes back.
+      config: { responseModalities: ['IMAGE', 'TEXT'] },
     }), 90_000, 'quick-render');
 
     let resultImage: string | null = null;
@@ -228,6 +238,52 @@ ${hasVerticalZones ? '7' : '6'}. PHOTOREALISM: The result must be pristine and p
     else if (msg.includes('safety')) errorMessage = 'Image flagged by safety filters.';
     else if (err?.message) errorMessage = `Generation failed: ${err.message}`;
     res.status(500).json({ error: errorMessage });
+  }
+});
+
+// ── POST /roof-quick-render ──────────────────────────────────────────────────
+// Roof counterpart to /quick-render. The prompt is built here, not accepted
+// from the caller, so a scraped endpoint can only ever render roofs.
+interface RoofZoneData {
+  name: string; productName: string; colorName: string;
+  colorHex: string; hue: string; materialType: string;
+}
+
+app.post('/roof-quick-render', generationLimiter, async (req, res) => {
+  const { imageBase64, mimeType, zones } = req.body as
+    { imageBase64: string; mimeType: string; zones: RoofZoneData[] };
+  if (!imageBase64 || !zones?.length) return res.status(400).json({ error: 'Missing imageBase64 or zones.' });
+
+  try {
+    validateImagePayload(imageBase64, mimeType);
+    const ai = getAI();
+
+    let prompt = `You are a strict, precise material-replacement engine mapping new textures onto a residential roof.\n\nApply ONLY these changes:\n`;
+    zones.forEach(z => {
+      prompt += `• ${z.name}: ${z.productName} "${z.colorName}" — ${z.hue} (hex ref: ${z.colorHex}) [Material: ${z.materialType}]\n`;
+    });
+    prompt += `\nCRITICAL RULES:
+1. PRESERVATION: You MUST strictly map the new roofing to the existing roof geometry. DO NOT alter the structural layout, camera perspective, or aspect ratio.
+2. NEGATIVE CONSTRAINTS: DO NOT add, remove, or modify siding, windows, doors, gutters, sky, trees, shadows, or lawn. Leave them 100% untouched.
+3. SCALE: The shingle scale must accurately match the scale of the house in the photograph.
+4. LIGHTING: Keep the exact same sunlight, shadows, and lighting direction as the original photo.
+5. PHOTOREALISM: The result must be pristine and professional. No AI artifacts, melting edges, or blurriness.`;
+
+    const response = await withTimeout(ai.models.generateContent({
+      model: 'gemini-3.1-flash-image-preview',
+      contents: { parts: [{ inlineData: { data: stripDataUrl(imageBase64), mimeType: mimeType || 'image/jpeg' } }, { text: prompt }] },
+      config: { responseModalities: ['IMAGE', 'TEXT'] },
+    }), 90_000, 'roof-quick-render');
+
+    let resultImage: string | null = null;
+    for (const part of response.candidates?.[0]?.content?.parts || []) {
+      if ((part as any).inlineData) { resultImage = `data:image/png;base64,${(part as any).inlineData.data}`; break; }
+    }
+    if (!resultImage) return res.status(500).json({ error: 'AI model did not return an image. Please try again.' });
+    res.json({ resultImage });
+  } catch (err: any) {
+    console.error('[roof-quick-render] error:', err?.message);
+    res.status(500).json({ error: err?.message || 'Roof render failed. Please try again.' });
   }
 });
 
@@ -570,7 +626,7 @@ export const api = onRequest(
     memory: '1GiB',
     timeoutSeconds: 300,   // AI image generation can take up to 2 min
     maxInstances: 10,
-    secrets: [geminiApiKey, resendApiKey, stripeSecretKey, stripeWebhookSecret, leadEmail, resendFrom],
+    secrets: [geminiApiKey],
   },
   app
 );

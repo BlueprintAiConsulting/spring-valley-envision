@@ -33,7 +33,10 @@ jobs:
       - run: npm ci
       - run: npm run build
         env:
-          VITE_GEMINI_API_KEY: ${{ secrets.VITE_GEMINI_API_KEY }}
+          # No Gemini key here on purpose. Generation goes through the Cloud
+          # Function, which holds the key as a Firebase secret, so nothing
+          # billable ever reaches the browser bundle.
+          VITE_API_BASE_URL: https://us-central1-blueprint-envision.cloudfunctions.net
 
       - uses: actions/upload-pages-artifact@v3
         with:
