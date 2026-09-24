@@ -1,5 +1,13 @@
 import { SidingLine, RoofingLine, SidingColor, RoofingColor, QuickZone, QuickRoofZone } from '../types';
 
+/**
+ * Resolve a bundled asset against the app's deploy base.
+ * Absolute /textures/... paths 404 when the app is served from a subfolder
+ * (e.g. GitHub Pages at /spring-valley-envision/), which made siding render
+ * as flat colour. BASE_URL is '/' at the domain root and './' in prod builds.
+ */
+const asset = (p: string) => `${import.meta.env.BASE_URL}${p.replace(/^\//, '')}`;
+
 // RGBA overlay colors for advanced-mode section mask visualization
 export const SECTION_COLORS: [number, number, number, number][] = [
   [59, 130, 246, 100],   // Blue
@@ -18,7 +26,7 @@ export const CERTAINTEED_OPTIONS: SidingLine[] = [
     line: 'MainStreet™',
     material: 'Vinyl Siding',
     profileLabel: 'D5\u2033 Colonial / D5\u2033 Dutchlap / Beaded',
-    textureImage: '/textures/horizontal-lap.png',
+    textureImage: asset('/textures/horizontal-lap.png'),
     textureStyle: 'horizontal-lap',
     description: 'Consistent quality and good looks for everyday homes.',
     colors: [
@@ -54,7 +62,7 @@ export const CERTAINTEED_OPTIONS: SidingLine[] = [
     line: 'Monogram®',
     material: 'Premium Vinyl Siding',
     profileLabel: 'D5\u2033 Colonial / D5\u2033 Dutchlap / S7\u2033',
-    textureImage: '/textures/dutch-lap.png',
+    textureImage: asset('/textures/dutch-lap.png'),
     textureStyle: 'dutch-lap',
     description: 'Premium woodgrain texture with industry-leading 38-color palette.',
     colors: [
@@ -103,7 +111,7 @@ export const CERTAINTEED_OPTIONS: SidingLine[] = [
     line: 'Cedar Impressions®',
     material: 'Polymer Shakes & Shingles',
     profileLabel: 'T5\u2033 Perfection Straight / D7\u2033 Staggered',
-    textureImage: '/textures/cedar-shake.png',
+    textureImage: asset('/textures/cedar-shake.png'),
     textureStyle: 'shake',
     description: 'Authentic cedar shingle look with 28 hand-selected colors.',
     colors: [
@@ -145,7 +153,7 @@ export const VERTICAL_SIDING_OPTIONS: SidingLine[] = [
     line: 'CedarBoards™',
     material: 'Insulated Board & Batten Vinyl',
     profileLabel: '7\u2033 & 8\u2033 Board + Batten — TrueTexture™ Cedar',
-    textureImage: '/textures/board-batten.png',
+    textureImage: asset('/textures/board-batten.png'),
     textureStyle: 'board-batten',
     description: 'Vertical board & batten with TrueTexture™ cedar finish and insulated foam backing.',
     style: 'vertical',
@@ -200,7 +208,7 @@ export const ROOFING_OPTIONS: RoofingLine[] = [
     line: 'Landmark®',
     materialType: 'Architectural Shingles',
     profileLabel: 'Dual-Layer Lifetime Shingles — StreakFighter®',
-    textureImage: '/textures/roof-architectural.png',
+    textureImage: asset('/textures/roof-architectural.png'),
     description: 'Reliable performance and classic CertainTeed dimension — 14 rich colors.',
     colors: [
       { id: 'lm-moire-black',      name: 'Moire Black',        hex: '#22252A', hue: 'Deep classic black-charcoal',          swatchImage: '' },
@@ -224,7 +232,7 @@ export const ROOFING_OPTIONS: RoofingLine[] = [
     line: 'Landmark® PRO',
     materialType: 'Max Def Architectural Shingles',
     profileLabel: 'Max Def Color Technology — NailTrak® & StreakFighter®',
-    textureImage: '/textures/roof-designer.png',
+    textureImage: asset('/textures/roof-designer.png'),
     description: 'Heavier weight with vibrant Max Def colors and maximum dimensionality.',
     colors: [
       { id: 'pro-moire-black',      name: 'Max Def Moire Black',      hex: '#22252A', hue: 'Deep high-definition rich black',     swatchImage: '' },

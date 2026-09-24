@@ -1,8 +1,12 @@
 /**
+
  * Spring Valley Roofing — Generic Siding Catalog
  * All product names and color values are original to Spring Valley Roofing.
  * Hex values are independently derived approximations of common exterior color families.
  */
+
+/** Resolve a bundled asset against the app's deploy base (see constants/catalog.ts). */
+const asset = (p: string) => `${import.meta.env.BASE_URL}${p.replace(/^\//, '')}`;
 
 export interface SidingColor {
   id: string;
@@ -30,7 +34,7 @@ export const HORIZON_OPTIONS: SidingLine[] = [
     line: 'Horizon™',
     material: 'Vinyl Siding',
     profileLabel: 'D5″ Lap / D5″ Dutch / Beaded',
-    textureImage: '/textures/horizontal-lap.png',
+    textureImage: asset('/textures/horizontal-lap.png'),
     textureStyle: 'horizontal-lap',
     description: 'Reliable performance and classic curb appeal for any home.',
     colors: [
@@ -70,7 +74,7 @@ export const PRESTIGE_OPTIONS: SidingLine[] = [
     line: 'Prestige™',
     material: 'Premium Vinyl Siding',
     profileLabel: 'D5″ Lap / D5″ Dutch / S7″',
-    textureImage: '/textures/dutch-lap.png',
+    textureImage: asset('/textures/dutch-lap.png'),
     textureStyle: 'dutch-lap',
     description: 'Enhanced woodgrain texture with a rich 38-color curated palette.',
     colors: [
@@ -123,7 +127,7 @@ export const ARTISAN_OPTIONS: SidingLine[] = [
     line: 'Artisan Cedar™',
     material: 'Polymer Shakes & Shingles',
     profileLabel: 'T5″ Straight / D7″ Staggered',
-    textureImage: '/textures/cedar-shake.png',
+    textureImage: asset('/textures/cedar-shake.png'),
     textureStyle: 'shake',
     description: 'Authentic cedar shingle character with a hand-selected color palette.',
     colors: [
@@ -166,7 +170,7 @@ export const VERTICAL_OPTIONS: SidingLine[] = [
     line: 'Vertical Plank™',
     material: 'Insulated Board & Batten Vinyl',
     profileLabel: '7″ & 8″ Board + Batten — TrueCedar™ Texture',
-    textureImage: '/textures/board-batten.png',
+    textureImage: asset('/textures/board-batten.png'),
     textureStyle: 'board-batten',
     description: 'Vertical board & batten with authentic cedar texture and insulated foam backing.',
     style: 'vertical',
