@@ -27,6 +27,13 @@ const geminiApiKey = defineSecret('GEMINI_API_KEY');
 // ── Express app ─────────────────────────────────────────────────────────────
 const app = express();
 
+// Cloud Functions sits behind Google's front end, so every request arrives from
+// the same proxy address and the real client IP is in X-Forwarded-For. Without
+// this, express-rate-limit cannot tell callers apart and the per-IP generation
+// cap below is effectively no cap at all — which matters now that this function
+// is the only thing holding the Gemini key.
+app.set('trust proxy', 1);
+
 // CORS — allow GitHub Pages + local dev
 const allowedOrigins = [
   'http://localhost:5173',
