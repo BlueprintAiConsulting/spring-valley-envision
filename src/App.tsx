@@ -23,6 +23,7 @@ import SidingCatalog from './components/catalog/SidingCatalog';
 import RoofingCatalog from './components/catalog/RoofingCatalog';
 import AdvancedCatalog from './components/catalog/AdvancedCatalog';
 import { FieldEstimateMode } from './components/fieldEstimate/FieldEstimateMode';
+import { friendlyError, logError } from './utils/errors';
 import { SpringValleyRole } from './types/auth';
 import { useAuth } from './contexts/AuthContext';
 
@@ -167,7 +168,8 @@ const App: React.FC = () => {
         ai.setDetectionProgress('✓ Sections defined');
       }
     } catch (e) {
-      ai.setError('Failed to detect sections.');
+      logError('detect sections', e);
+      ai.setError(friendlyError(e));
     } finally {
       ai.setIsDetectingSections(false);
     }
@@ -239,8 +241,9 @@ const App: React.FC = () => {
 
         setRenderPhase('done');
         setQuickResult(currentImage);
-      } catch (err: any) {
-        ai.setError(err.message || 'Generation failed.');
+      } catch (err: unknown) {
+        logError('quick generate', err);
+        ai.setError(friendlyError(err));
       } finally {
         ai.setIsQuickGenerating(false);
         setTimeout(() => setRenderPhase('idle'), 2000);
@@ -265,7 +268,8 @@ const App: React.FC = () => {
         const data = await res.json();
         if (data.resultImage) setResultImage(data.resultImage);
       } catch (e) {
-        ai.setError('Generation failed.');
+        logError('advanced generate', e);
+        ai.setError(friendlyError(e));
       } finally {
         ai.setIsProcessing(false);
       }
@@ -286,7 +290,8 @@ const App: React.FC = () => {
         throw new Error('No enhanced image returned');
       }
     } catch (e: unknown) {
-      ai.setError(e instanceof Error ? e.message : 'Optimization failed.');
+      logError('enhance', e);
+      ai.setError(friendlyError(e));
     } finally {
       ai.setIsProcessing(false);
     }
