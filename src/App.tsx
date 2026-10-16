@@ -95,7 +95,7 @@ const App: React.FC = () => {
   // --- PIPELINE STATE ---
   const [renderPhase, setRenderPhase] = useState<'idle' | 'roof' | 'siding' | 'done'>('idle');
   const [roofPassResult, setRoofPassResult] = useState<string | null>(null);
-  const [collapsedPanels, setCollapsedPanels] = useState<Set<string>>(new Set());
+  const [collapsedPanels, setCollapsedPanels] = useState<Set<string>>(() => new Set(['siding']));
 
   // --- REFS ---
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -154,7 +154,7 @@ const App: React.FC = () => {
       const scaled = await downscaleImage(selectedImage, 1024);
       const data = await detectSections(scaled, 'image/jpeg');
       if (data.sections) {
-        const mappedSections: Section[] = data.sections.map((s, idx) => ({
+        const mappedSections: Section[] = data.sections.map((s: { name: string; maskTarget: string }, idx: number) => ({
           id: `sec-${Date.now()}-${idx}`,
           name: s.name,
           maskData: null,
@@ -222,7 +222,7 @@ const App: React.FC = () => {
         if (hasSidingChanges) {
           setRenderPhase('siding');
           const sidingZonesPayload = quickZones
-            .filter(z => z.enabled || z.id === 'qz-main')
+            .filter(z => z.enabled)
             .map(z => ({
               name: z.name,
               lineName: z.selectedLine.line,
@@ -249,7 +249,7 @@ const App: React.FC = () => {
         setTimeout(() => setRenderPhase('idle'), 2000);
       }
     } else {
-      // Advanced generation logic (unchanged)
+      // Advanced generation logic
       ai.setIsProcessing(true);
       try {
         const scaled = await downscaleImage(selectedImage, 1536);
@@ -259,13 +259,20 @@ const App: React.FC = () => {
           body: JSON.stringify({
             imageBase64: scaled.split(',')[1],
             sections: sections.map(s => ({
+              id: s.id,
+              name: s.name,
+              maskData: s.maskData,
               maskBase64: s.maskData?.split(',')[1],
+              selectedLine: s.selectedLine,
+              selectedColor: s.selectedColor,
+              maskTarget: s.maskTarget,
               color_hex: s.selectedColor.hex,
               texture: s.selectedLine.textureImage
             }))
           })
         });
         const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Advanced visualization failed.');
         if (data.resultImage) setResultImage(data.resultImage);
       } catch (e) {
         logError('advanced generate', e);

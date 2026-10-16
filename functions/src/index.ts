@@ -34,31 +34,18 @@ const app = express();
 // is the only thing holding the Gemini key.
 app.set('trust proxy', 1);
 
-// CORS — allow GitHub Pages + local dev
-const allowedOrigins = [
-  'http://localhost:5173',
-  'http://localhost:3000',
-  'http://localhost:3001',
-  'http://localhost:3002',
-  'https://blueprintaiconsulting.github.io',
-  'https://springvalleyroofing.com',
-  'https://www.springvalleyroofing.com',
-  'https://spring-valley-roofing.web.app',
-  'https://blueprint-envision.web.app',
-  'https://blueprint-envision-platform.onrender.com' // keep old origin during migration
-];
-
-app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.some(o => origin.startsWith(o))) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  }
-}));
+// CORS — allow all web, iframe, and preview origins without throwing 500s
+app.use(cors({ origin: true }));
 
 app.use(express.json({ limit: '50mb' }));
+
+// Normalize optional /api prefix so routes work both via cloudfunctions.net/api/<route>
+// and via Firebase Hosting rewrites (/api/<route>)
+app.use((req, _res, next) => {
+  if (req.url === '/api') req.url = '/';
+  else if (req.url.startsWith('/api/')) req.url = req.url.slice(4);
+  next();
+});
 
 // ── Rate limiters ─────────────────────────────────────────────────────────────
 const generationLimiter = rateLimit({
@@ -294,16 +281,18 @@ app.post('/roof-quick-render', generationLimiter, async (req, res) => {
   }
 });
 
-// ── POST /generate ───────────────────────────────────────────────────────────
+// ── POST /generate & /roof-generate ──────────────────────────────────────────
 interface SectionData {
-  id: string; name: string; maskData: string | null;
-  selectedLine: { tier: string; line: string; material: string };
-  selectedColor: { name: string; hex: string; hue: string };
-  maskTarget: string;
+  id?: string; name?: string; maskData?: string | null; maskBase64?: string | null;
+  selectedLine?: { tier?: string; line?: string; material?: string };
+  selectedColor?: { name?: string; hex?: string; hue?: string };
+  color_hex?: string;
+  texture?: string;
+  maskTarget?: string;
 }
 
-app.post('/generate', generationLimiter, async (req, res) => {
-  const { imageBase64, sections, lightingCondition, isHighQuality, imageSize, mimeType: srcMimeType } = req.body;
+const handleAdvancedGenerate = async (req: express.Request, res: express.Response) => {
+  const { imageBase64, sections, lightingCondition, mimeType: srcMimeType } = req.body;
   if (!imageBase64 || !sections?.length) {
     return res.status(400).json({ error: 'Missing required fields: imageBase64, sections.' });
   }
@@ -312,35 +301,49 @@ app.post('/generate', generationLimiter, async (req, res) => {
     validateImagePayload(imageBase64, srcMimeType);
     const ai = getAI();
     const parts: any[] = [
-      { inlineData: { data: imageBase64, mimeType: srcMimeType || 'image/jpeg' } },
+      { inlineData: { data: stripDataUrl(imageBase64), mimeType: srcMimeType || 'image/jpeg' } },
     ];
 
     let promptText = `You are an expert architectural visualizer. Modify this house image according to the following section specifications:`;
 
     (sections as SectionData[]).forEach((section, index) => {
-      if (section.maskData) {
-        const maskBase64 = section.maskData.includes(',') ? section.maskData.split(',')[1] : section.maskData;
+      const rawMask = section.maskData || section.maskBase64;
+      const lineName = section.selectedLine?.line || 'CertainTeed';
+      const materialName = section.selectedLine?.material || 'Exterior Cladding';
+      const colorName = section.selectedColor?.name || section.color_hex || 'Selected Color';
+      const colorHue = section.selectedColor?.hue || '';
+      const colorHex = section.selectedColor?.hex || section.color_hex || '#4A4D4A';
+      const targetDesc = section.maskTarget || section.name || `Zone ${index + 1}`;
+
+      if (rawMask) {
+        const maskBase64 = stripDataUrl(rawMask);
         parts.push({ inlineData: { data: maskBase64, mimeType: 'image/jpeg' } });
-        promptText += `\n\nSECTION ${index + 1} (${section.name}):
+        promptText += `\n\nSECTION ${index + 1} (${section.name || targetDesc}):
 - Target Area: Defined by the provided mask image #${index + 1} (where white is the target).
-- Material: ${section.selectedLine.line} ${section.selectedLine.material}
-- Color: ${section.selectedColor.name} — ${section.selectedColor.hue} (Hex reference: ${section.selectedColor.hex})`;
+- Material: ${lineName} ${materialName}
+- Color: ${colorName}${colorHue ? ` - ${colorHue}` : ''} (Hex reference: ${colorHex})`;
+      } else {
+        promptText += `\n\nSECTION ${index + 1} (${section.name || targetDesc}):
+- Target Area: ${targetDesc}
+- Material: ${lineName} ${materialName}
+- Color: ${colorName}${colorHue ? ` - ${colorHue}` : ''} (Hex reference: ${colorHex})`;
       }
     });
 
     promptText += `\n\nCRITICAL INSTRUCTIONS:
-1. HARD BOUNDARIES: Treat the provided white masks as ABSOLUTE constraints.
-2. GEOMETRIC PRESERVATION: You MUST preserve the exact geometric structure, structural lines, perspective, lighting direction, and surrounding environment.
-3. NEGATIVE CONSTRAINTS: DO NOT TOUCH or alter roof shingles, window glass, door glass, gutters, downspouts, landscaping, driveways, or sky unless explicitly covered by a white mask.
-4. LIGHTING INTEGRITY: Apply a ${lightingCondition?.toLowerCase() || 'natural'} lighting condition to the siding, but respect the original shadow map.
-5. SCALE: Ensure the siding laps/boards are correctly scaled relative to the distance of the house.
-6. PHOTOREALISM: The applied siding must look like a high-end architectural photo.`;
+1. BOUNDARIES: Apply material changes strictly to the specified target zones.
+2. GEOMETRIC PRESERVATION: Preserve the exact geometric structure, structural lines, perspective, lighting direction, and surrounding environment.
+3. NEGATIVE CONSTRAINTS: DO NOT TOUCH or alter window glass, door glass, landscaping, driveways, or sky.
+4. LIGHTING INTEGRITY: Apply a ${lightingCondition?.toLowerCase() || 'natural'} lighting condition and respect the original shadow map.
+5. SCALE: Ensure shingle/siding courses are accurately scaled relative to the house.
+6. PHOTOREALISM: Output a high-resolution photorealistic architectural visualization.`;
 
     parts.push({ text: promptText });
 
     const response = await withTimeout(ai.models.generateContent({
       model: 'gemini-3.1-flash-image-preview',
       contents: { parts },
+      config: { responseModalities: ['IMAGE', 'TEXT'] },
     }), 120_000, 'generate');
 
     let resultImage: string | null = null;
@@ -366,7 +369,10 @@ app.post('/generate', generationLimiter, async (req, res) => {
     else if (err?.message) errorMessage = `Generation failed: ${err.message}`;
     res.status(500).json({ error: errorMessage });
   }
-});
+};
+
+app.post('/generate', generationLimiter, handleAdvancedGenerate);
+app.post('/roof-generate', generationLimiter, handleAdvancedGenerate);
 
 // ── POST /detect-sections ────────────────────────────────────────────────────
 app.post('/detect-sections', async (req, res) => {

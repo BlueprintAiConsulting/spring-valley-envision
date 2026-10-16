@@ -267,7 +267,7 @@ export const DEFAULT_QUICK_ROOF_ZONES: QuickRoofZone[] = [
 ];
 
 export const DEFAULT_QUICK_ZONES: QuickZone[] = [
-  { id: 'qz-main',     name: 'Main Body',   enabled: true,  selectedLine: CERTAINTEED_OPTIONS[1], selectedColor: CERTAINTEED_OPTIONS[1].colors[0] },
+  { id: 'qz-main',     name: 'Main Body',   enabled: false, selectedLine: CERTAINTEED_OPTIONS[1], selectedColor: CERTAINTEED_OPTIONS[1].colors[0] },
   { id: 'qz-gable',    name: 'Upper Gable', enabled: false, selectedLine: CERTAINTEED_OPTIONS[2], selectedColor: CERTAINTEED_OPTIONS[2].colors[0] },
   { id: 'qz-dormer',   name: 'Dormer',      enabled: false, selectedLine: CERTAINTEED_OPTIONS[2], selectedColor: CERTAINTEED_OPTIONS[2].colors[3] },
   { id: 'qz-trim',     name: 'Trim',        enabled: false, selectedLine: CERTAINTEED_OPTIONS[0], selectedColor: TRIM_COLORS[0] },
