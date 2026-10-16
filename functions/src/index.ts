@@ -93,11 +93,18 @@ function validateImagePayload(base64: string, mime: string = '') {
   if (roughSizeBytes > 20 * 1024 * 1024) throw new Error('Image exceeds 20MB safety limit');
 }
 
-// ── Lazy AI client (initialized on first request) ───────────────────────────
+// ── Lazy AI client (initialized on first request via Vertex AI ADC) ─────────
+const IMAGE_MODEL = 'gemini-2.5-flash-image';
+const TEXT_MODEL = 'gemini-2.5-flash';
+
 let aiClient: GoogleGenAI | null = null;
 function getAI(): GoogleGenAI {
   if (!aiClient) {
-    aiClient = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
+    aiClient = new GoogleGenAI({
+      vertexai: true,
+      project: process.env.GCLOUD_PROJECT || 'blueprint-envision',
+      location: 'global',
+    });
   }
   return aiClient;
 }
@@ -126,7 +133,7 @@ app.post('/auto-mask', generationLimiter, async (req, res) => {
     const activeExclusions = allExclusions.filter(e => !targetLower.includes(e));
 
     const response = await withTimeout(ai.models.generateContent({
-      model: 'gemini-3.1-flash-image-preview',
+      model: IMAGE_MODEL,
       contents: {
         parts: [
           { inlineData: { data: imageBase64, mimeType: mimeType || 'image/png' } },
@@ -212,7 +219,7 @@ ${hasVerticalZones ? '6' : '5'}. LIGHTING: Keep the exact same sunlight, shadows
 ${hasVerticalZones ? '7' : '6'}. PHOTOREALISM: The result must be pristine and professional. No AI artifacts, melting edges, or blurriness.`;
 
     const response = await withTimeout(ai.models.generateContent({
-      model: 'gemini-3.1-flash-image-preview',
+      model: IMAGE_MODEL,
       contents: { parts: [{ inlineData: { data: stripDataUrl(imageBase64), mimeType: mimeType || 'image/jpeg' } }, { text: prompt }] },
       // Without this the model answers with text only and no image comes back.
       config: { responseModalities: ['IMAGE', 'TEXT'] },
@@ -264,7 +271,7 @@ app.post('/roof-quick-render', generationLimiter, async (req, res) => {
 5. PHOTOREALISM: The result must be pristine and professional. No AI artifacts, melting edges, or blurriness.`;
 
     const response = await withTimeout(ai.models.generateContent({
-      model: 'gemini-3.1-flash-image-preview',
+      model: IMAGE_MODEL,
       contents: { parts: [{ inlineData: { data: stripDataUrl(imageBase64), mimeType: mimeType || 'image/jpeg' } }, { text: prompt }] },
       config: { responseModalities: ['IMAGE', 'TEXT'] },
     }), 90_000, 'roof-quick-render');
@@ -341,7 +348,7 @@ const handleAdvancedGenerate = async (req: express.Request, res: express.Respons
     parts.push({ text: promptText });
 
     const response = await withTimeout(ai.models.generateContent({
-      model: 'gemini-3.1-flash-image-preview',
+      model: IMAGE_MODEL,
       contents: { parts },
       config: { responseModalities: ['IMAGE', 'TEXT'] },
     }), 120_000, 'generate');
@@ -475,7 +482,7 @@ app.post('/enhance-image', generationLimiter, async (req, res) => {
     validateImagePayload(imageBase64, mimeType);
     const ai = getAI();
     const response = await ai.models.generateContent({
-      model: 'gemini-3.1-flash-image-preview',
+      model: IMAGE_MODEL,
       contents: [{
         role: 'user',
         parts: [
