@@ -134,9 +134,10 @@ app.post('/auto-mask', generationLimiter, async (req, res) => {
 
     const response = await withTimeout(ai.models.generateContent({
       model: IMAGE_MODEL,
-      contents: {
+      contents: [{
+        role: 'user',
         parts: [
-          { inlineData: { data: imageBase64, mimeType: mimeType || 'image/png' } },
+          { inlineData: { data: stripDataUrl(imageBase64), mimeType: mimeType || 'image/png' } },
           {
             text: `Create a pixel-perfect, high-contrast binary segmentation mask (black and white only) for the following target: "${maskTarget}".
               
@@ -149,7 +150,8 @@ CRITICAL RULES:
 6. OUTPUT: Return only a flat, 2D black and white silhouette mask image.`,
           },
         ],
-      },
+      }],
+      config: { responseModalities: ['IMAGE', 'TEXT'] },
     }), 90_000, 'auto-mask');
 
     let maskBase64 = '';
@@ -220,7 +222,7 @@ ${hasVerticalZones ? '7' : '6'}. PHOTOREALISM: The result must be pristine and p
 
     const response = await withTimeout(ai.models.generateContent({
       model: IMAGE_MODEL,
-      contents: { parts: [{ inlineData: { data: stripDataUrl(imageBase64), mimeType: mimeType || 'image/jpeg' } }, { text: prompt }] },
+      contents: [{ role: 'user', parts: [{ inlineData: { data: stripDataUrl(imageBase64), mimeType: mimeType || 'image/jpeg' } }, { text: prompt }] }],
       // Without this the model answers with text only and no image comes back.
       config: { responseModalities: ['IMAGE', 'TEXT'] },
     }), 90_000, 'quick-render');
@@ -272,7 +274,7 @@ app.post('/roof-quick-render', generationLimiter, async (req, res) => {
 
     const response = await withTimeout(ai.models.generateContent({
       model: IMAGE_MODEL,
-      contents: { parts: [{ inlineData: { data: stripDataUrl(imageBase64), mimeType: mimeType || 'image/jpeg' } }, { text: prompt }] },
+      contents: [{ role: 'user', parts: [{ inlineData: { data: stripDataUrl(imageBase64), mimeType: mimeType || 'image/jpeg' } }, { text: prompt }] }],
       config: { responseModalities: ['IMAGE', 'TEXT'] },
     }), 90_000, 'roof-quick-render');
 
@@ -349,7 +351,7 @@ const handleAdvancedGenerate = async (req: express.Request, res: express.Respons
 
     const response = await withTimeout(ai.models.generateContent({
       model: IMAGE_MODEL,
-      contents: { parts },
+      contents: [{ role: 'user', parts }],
       config: { responseModalities: ['IMAGE', 'TEXT'] },
     }), 120_000, 'generate');
 
@@ -391,10 +393,11 @@ app.post('/detect-sections', async (req, res) => {
   try {
     const ai = getAI();
     const response = await withTimeout(ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: {
+      model: TEXT_MODEL,
+      contents: [{
+        role: 'user',
         parts: [
-          { inlineData: { data: imageBase64, mimeType: mimeType || 'image/jpeg' } },
+          { inlineData: { data: stripDataUrl(imageBase64), mimeType: mimeType || 'image/jpeg' } },
           {
             text: `You are an expert architectural analyst specializing in residential exterior design. Analyze this house photograph and identify every DISTINCT exterior zone that a homeowner might want to apply a DIFFERENT siding color or material to.
 
@@ -419,7 +422,7 @@ Return ONLY valid JSON matching this exact schema:
 }`,
           },
         ],
-      },
+      }],
     }), 30_000, 'detect-sections');
 
     const rawText = response.candidates?.[0]?.content?.parts?.[0]?.text || '';
