@@ -95,7 +95,7 @@ const App: React.FC = () => {
   // --- PIPELINE STATE ---
   const [renderPhase, setRenderPhase] = useState<'idle' | 'roof' | 'siding' | 'done'>('idle');
   const [roofPassResult, setRoofPassResult] = useState<string | null>(null);
-  const [collapsedPanels, setCollapsedPanels] = useState<Set<string>>(() => new Set(['siding']));
+  const [collapsedPanels, setCollapsedPanels] = useState<Set<string>>(() => new Set());
 
   // --- REFS ---
   const fileInputRef = useRef<HTMLInputElement>(null);

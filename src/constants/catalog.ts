@@ -201,6 +201,8 @@ export const TRIM_COLORS: SidingColor[] = [
 ];
 
 export const ALL_SIDING_OPTIONS = [...CERTAINTEED_OPTIONS, ...VERTICAL_SIDING_OPTIONS];
+export const SIDING_OPTIONS = ALL_SIDING_OPTIONS;
+
 
 export const ROOFING_OPTIONS: RoofingLine[] = [
   {
