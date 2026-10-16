@@ -16,6 +16,7 @@ import {
 } from '../../utils/takeoffEngine';
 import { PricingSettingsModal } from './PricingSettingsModal';
 import { TakeoffSummaryModal } from './TakeoffSummaryModal';
+import { processCameraOrUploadImage } from '../../utils/image';
 import {
   Camera,
   Upload,
@@ -114,6 +115,7 @@ export const FieldEstimateMode: React.FC<Props> = ({
   const [showSummaryModal, setShowSummaryModal] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
 
   // Check on mount if restored from draft
   useEffect(() => {
@@ -165,21 +167,32 @@ export const FieldEstimateMode: React.FC<Props> = ({
     );
   };
 
-  // Handle Photo Upload
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Handle Photo Upload (hardened with mobile camera auto-orientation & downscaling)
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const url = event.target?.result as string;
+    try {
+      const processed = await processCameraOrUploadImage(file, 1600, 0.85);
       updateActiveElevation((prev) => ({
         ...prev,
-        photoUrl: url,
+        photoUrl: processed.dataUrl,
         renderedUrl: null, // Reset rendered until visualized
       }));
-    };
-    reader.readAsDataURL(file);
+    } catch {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const url = event.target?.result as string;
+        updateActiveElevation((prev) => ({
+          ...prev,
+          photoUrl: url,
+          renderedUrl: null, // Reset rendered until visualized
+        }));
+      };
+      reader.readAsDataURL(file);
+    } finally {
+      e.target.value = '';
+    }
   };
 
   // Trigger Mock or AI Visualization for this elevation
@@ -336,7 +349,19 @@ export const FieldEstimateMode: React.FC<Props> = ({
         ref={fileInputRef}
         onChange={handlePhotoUpload}
         accept="image/*"
-        className="hidden"
+        className="sr-only"
+        tabIndex={-1}
+        aria-hidden="true"
+      />
+      <input
+        type="file"
+        ref={cameraInputRef}
+        onChange={handlePhotoUpload}
+        accept="image/*"
+        capture="environment"
+        className="sr-only"
+        tabIndex={-1}
+        aria-hidden="true"
       />
 
       {/* ──────── TOP BANNER & PROGRESS ──────── */}
@@ -441,10 +466,16 @@ export const FieldEstimateMode: React.FC<Props> = ({
 
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() => fileInputRef.current?.click()}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-[#D0D7DE] bg-[#0B131E] hover:bg-[#1A2838] border border-[#223448] transition-colors"
+                  onClick={() => cameraInputRef.current?.click()}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-[#42C2ED] bg-[#18A9D9]/20 hover:bg-[#18A9D9]/30 border border-[#18A9D9]/40 transition-colors touch-manipulation"
                 >
-                  <Camera className="w-3.5 h-3.5 text-[#18A9D9]" /> {activeElevation.photoUrl ? 'Replace Photo' : 'Upload Photo'}
+                  <Camera className="w-3.5 h-3.5" /> Camera
+                </button>
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-[#D0D7DE] bg-[#0B131E] hover:bg-[#1A2838] border border-[#223448] transition-colors touch-manipulation"
+                >
+                  <Upload className="w-3.5 h-3.5 text-[#9BA8B8]" /> Gallery
                 </button>
               </div>
             </div>
@@ -482,12 +513,20 @@ export const FieldEstimateMode: React.FC<Props> = ({
                   <p className="text-xs text-[#9BA8B8] mb-4 leading-relaxed">
                     Snap a photo of the {activeElevation.compassLabel.toLowerCase()} on-site or choose from your device gallery.
                   </p>
-                  <button
-                    onClick={() => fileInputRef.current?.click()}
-                    className="bg-[#18A9D9] hover:bg-[#0DA7E3] text-white px-5 py-2.5 rounded-xl text-xs font-bold transition-all shadow-md inline-flex items-center gap-2"
-                  >
-                    <Upload className="w-4 h-4" /> Upload Photo
-                  </button>
+                  <div className="flex items-center justify-center gap-2.5">
+                    <button
+                      onClick={() => cameraInputRef.current?.click()}
+                      className="bg-[#18A9D9] hover:bg-[#0DA7E3] text-white px-4 py-2.5 rounded-xl text-xs font-bold transition-all shadow-md inline-flex items-center gap-2 touch-manipulation"
+                    >
+                      <Camera className="w-4 h-4" /> Camera
+                    </button>
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      className="bg-[#131F2E] hover:bg-[#1E2D40] text-[#D0D7DE] border border-[#223448] px-4 py-2.5 rounded-xl text-xs font-bold transition-all shadow-md inline-flex items-center gap-2 touch-manipulation"
+                    >
+                      <Upload className="w-4 h-4 text-[#9BA8B8]" /> Gallery
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
