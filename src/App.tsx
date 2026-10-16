@@ -448,7 +448,12 @@ const App: React.FC = () => {
                         setQuickZones={setQuickZones}
                         expandedZoneId={expandedZoneId}
                         setExpandedZoneId={setExpandedZoneId}
-                        onColorMouseEnter={(c) => { setSwatchPreviewHex(c.hex); setSwatchPreviewName(c.name); setSwatchPreviewImage(null); }}
+                        onColorMouseEnter={(c) => { 
+                          const texture = quickZones.find(z => z.id === 'qz-main')?.selectedLine.textureImage;
+                          setSwatchPreviewHex(c.hex); 
+                          setSwatchPreviewName(c.name); 
+                          setSwatchPreviewImage(texture || null); 
+                        }}
                         onColorMouseLeave={() => { setSwatchPreviewHex(null); setSwatchPreviewName(null); setSwatchPreviewImage(null); }}
                       />
                     </div>

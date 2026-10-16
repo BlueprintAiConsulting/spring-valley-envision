@@ -219,13 +219,29 @@ const VisualizerCanvas: React.FC<VisualizerCanvasProps> = ({
                   <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5 pointer-events-none z-10">
                     <div className="w-20 h-12 rounded-lg shadow-2xl border border-white/20 overflow-hidden relative" style={{ backgroundColor: swatchPreviewHex }}>
                       {swatchPreviewImage && (
-                        <img src={swatchPreviewImage} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                        <div
+                          className="absolute inset-0 pointer-events-none"
+                          style={{
+                            backgroundImage: `url(${swatchPreviewImage})`,
+                            backgroundSize: 'cover',
+                            mixBlendMode: swatchPreviewImage.includes('/textures/roofing/') ? 'normal' : 'multiply',
+                            opacity: swatchPreviewImage.includes('/textures/roofing/') ? 1 : 0.65,
+                          }}
+                        />
                       )}
                     </div>
                     <div className="flex items-center gap-2 bg-[#0F172A]/90 backdrop-blur-md border border-[#334155] rounded-full px-3 py-1.5 shadow-xl">
                       <div className="w-2.5 h-2.5 rounded-full border border-white/20 shrink-0 overflow-hidden relative" style={{ backgroundColor: swatchPreviewHex }}>
                         {swatchPreviewImage && (
-                          <img src={swatchPreviewImage} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                          <div
+                            className="absolute inset-0 pointer-events-none"
+                            style={{
+                              backgroundImage: `url(${swatchPreviewImage})`,
+                              backgroundSize: 'cover',
+                              mixBlendMode: swatchPreviewImage.includes('/textures/roofing/') ? 'normal' : 'multiply',
+                              opacity: swatchPreviewImage.includes('/textures/roofing/') ? 1 : 0.65,
+                            }}
+                          />
                         )}
                       </div>
                       <span className="text-[10px] font-bold text-[#E2E8F0] uppercase tracking-wider whitespace-nowrap">{swatchPreviewName}</span>

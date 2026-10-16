@@ -81,6 +81,7 @@ const RoofingCatalog: React.FC<RoofingCatalogProps> = ({
         onMouseEnter={onColorMouseEnter}
         onMouseLeave={onColorMouseLeave}
         isExpanded={true}
+        textureStyle={zone.selectedLine.textureStyle}
         ringColor="#3B82F6"
       />
     </div>
