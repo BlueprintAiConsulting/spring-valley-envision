@@ -180,7 +180,7 @@ export default function Landing() {
             className="text-4xl sm:text-6xl md:text-7xl font-extrabold tracking-tight leading-[1.12] mb-6 max-w-5xl mx-auto"
           >
             See Your Dream Roof & Siding <br />
-            <span className="bg-gradient-to-r from-[#18A9D9] via-[#42C2ED] to-[#83C248] bg-clip-text text-transparent">
+            <span className="text-[#18A9D9]">
               Before We Drive A Single Nail.
             </span>
           </motion.h1>

@@ -143,7 +143,7 @@ const VisualizerCanvas: React.FC<VisualizerCanvasProps> = ({
     window.addEventListener('mouseup', onUp);
   }, [updateSlider]);
 
-  // Touch-based slider drag (mobile) — passive-safe
+  // Touch-based slider drag (mobile) — passive-safe & rAF throttled via updateSlider
   const handleSliderTouchStart = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
     updateSlider(e.touches[0].clientX, rect);
@@ -265,7 +265,7 @@ const VisualizerCanvas: React.FC<VisualizerCanvasProps> = ({
           <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center text-center p-12">
             <div className="w-24 h-24 bg-[#0F172A] rounded-2xl border border-[#1E293B] flex items-center justify-center mb-8 shadow-inner rotate-3"><ImageIcon className="w-10 h-10 text-[#334155]" /></div>
             <h4 className="text-sm font-bold uppercase tracking-[0.2em] mb-3 text-[#E2E8F0]">No Asset Detected</h4>
-            <p className="text-[#64748B] text-xs font-medium max-w-xs leading-relaxed mb-6">Please upload a site photograph to begin.</p>
+            <p className="text-[#94A3B8] text-xs font-medium max-w-xs leading-relaxed mb-6">Please upload a site photograph to begin.</p>
           </motion.div>
         )}
       </AnimatePresence>

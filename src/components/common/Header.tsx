@@ -22,6 +22,18 @@ const Header: React.FC<HeaderProps> = ({
 }) => {
   const base = import.meta.env.BASE_URL || '/';
   const { currentUser, activeRole, logout } = useAuth();
+  const [userMenuOpen, setUserMenuOpen] = React.useState(false);
+  const userMenuRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setUserMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const ROLES: SpringValleyRole[] = [
     'Owner', 
@@ -54,26 +66,30 @@ const Header: React.FC<HeaderProps> = ({
 
         {/* Center Mode Switcher */}
         {onViewChange && (
-          <div className="flex items-center bg-[#131F2E] border border-[#223448] rounded-xl p-1 shadow-inner">
+          <div className="flex items-center bg-[#131F2E] border border-[#223448] rounded-xl p-1 shadow-inner shrink-0">
             <button
               onClick={() => onViewChange('studio')}
-              className={`px-3 sm:px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+              className={`min-h-[44px] px-2.5 sm:px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 touch-manipulation ${
                 mainView === 'studio'
                   ? 'bg-[#18A9D9] text-white shadow-[0_0_14px_rgba(24,169,217,0.4)]'
                   : 'text-[#9BA8B8] hover:text-white'
               }`}
             >
-              🎨 <span className="hidden sm:inline">Studio Visualizer</span><span className="sm:hidden">Studio</span>
+              <span>🎨</span>
+              <span className="hidden sm:inline">Studio Visualizer</span>
+              <span className="sm:hidden text-[11px]">Studio</span>
             </button>
             <button
               onClick={() => onViewChange('field')}
-              className={`px-3 sm:px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+              className={`min-h-[44px] px-2.5 sm:px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 touch-manipulation ${
                 mainView === 'field'
                   ? 'bg-[#83C248] text-white shadow-[0_0_14px_rgba(131,194,72,0.4)]'
                   : 'text-[#9BA8B8] hover:text-white'
               }`}
             >
-              📐 <span className="hidden sm:inline">4-Side Field Takeoff</span><span className="sm:hidden">Field Takeoff</span>
+              <span>📐</span>
+              <span className="hidden sm:inline">4-Side Field Takeoff</span>
+              <span className="sm:hidden text-[11px]">Takeoff</span>
             </button>
           </div>
         )}
@@ -83,33 +99,41 @@ const Header: React.FC<HeaderProps> = ({
           
           {/* Auth Status & Sign Out */}
           {currentUser && (
-            <div className="relative group mr-2">
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#131F2E] border border-[#223448] text-xs font-semibold text-[#18A9D9] cursor-pointer">
-                <UserCircle className="w-4 h-4" />
+            <div className="relative mr-1" ref={userMenuRef}>
+              <button
+                type="button"
+                onClick={() => setUserMenuOpen((prev) => !prev)}
+                className="min-h-[44px] flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-lg bg-[#131F2E] border border-[#223448] text-xs font-semibold text-[#18A9D9] cursor-pointer touch-manipulation active:scale-95"
+                aria-expanded={userMenuOpen}
+              >
+                <UserCircle className="w-4 h-4 shrink-0" />
                 <span className="hidden sm:inline">{activeRole}</span>
-              </div>
+              </button>
               
-              <div className="absolute right-0 top-full mt-1 w-48 bg-[#0B131E] border border-[#223448] rounded-xl shadow-2xl opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity z-50 overflow-hidden">
-                <div className="px-3 py-2 border-b border-[#223448] bg-[#0E1620]">
-                  <div className="text-[10px] font-bold text-[#9BA8B8] truncate">{currentUser.email}</div>
+              {userMenuOpen && (
+                <div className="absolute right-0 top-full mt-1.5 w-48 bg-[#0B131E] border border-[#223448] rounded-xl shadow-2xl z-50 overflow-hidden animate-in fade-in duration-100">
+                  <div className="px-3 py-2 border-b border-[#223448] bg-[#0E1620]">
+                    <div className="text-[10px] font-bold text-[#9BA8B8] truncate">{currentUser.email}</div>
+                    <div className="text-[9px] text-[#18A9D9] font-medium sm:hidden mt-0.5">{activeRole}</div>
+                  </div>
+                  <button
+                    onClick={() => { setUserMenuOpen(false); logout(); }}
+                    className="min-h-[44px] w-full text-left px-3 py-2 text-xs transition-colors text-red-400 hover:bg-[#1A2838] flex items-center touch-manipulation"
+                  >
+                    Sign Out
+                  </button>
                 </div>
-                <button
-                  onClick={() => logout()}
-                  className="w-full text-left px-3 py-2 text-xs transition-colors text-red-400 hover:bg-[#1A2838]"
-                >
-                  Sign Out
-                </button>
-              </div>
+              )}
             </div>
           )}
 
           {hasImage && mainView === 'studio' && (
             <button
               onClick={onStartOver}
-              className="hover:text-red-400 text-red-500/70 transition-colors flex items-center gap-1.5 text-xs font-medium p-1.5 sm:p-0"
+              className="min-h-[44px] min-w-[44px] hover:text-red-400 text-red-500/70 transition-colors flex items-center justify-center gap-1.5 text-xs font-medium p-1.5 sm:p-0 touch-manipulation active:scale-95"
               title="Start Over"
             >
-              <Trash2 className="w-3.5 h-3.5" />
+              <Trash2 className="w-4 h-4" />
               <span className="hidden sm:inline">Reset</span>
             </button>
           )}
@@ -118,13 +142,13 @@ const Header: React.FC<HeaderProps> = ({
             <button
               onClick={onQuoteClick}
               disabled={!isQuoteAvailable}
-              className={`px-3 sm:px-4 py-2 rounded-lg transition-all active:scale-95 text-[11px] font-bold flex items-center gap-1.5 whitespace-nowrap ${
+              className={`min-h-[44px] px-3 sm:px-4 py-2 rounded-lg transition-all active:scale-95 text-[11px] font-bold flex items-center justify-center gap-1.5 whitespace-nowrap touch-manipulation ${
                 isQuoteAvailable
                   ? 'bg-[#83C248] hover:bg-[#93D553] text-white shadow-[0_0_20px_rgba(131,194,72,0.5)]'
                   : 'bg-[#1E293B] text-[#475569] cursor-not-allowed'
               }`}
             >
-              <Sparkles className="w-3 h-3" />
+              <Sparkles className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Get Free Quote</span>
               <span className="sm:hidden">Quote</span>
             </button>
