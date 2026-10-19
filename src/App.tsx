@@ -16,6 +16,7 @@ import Footer from './components/common/Footer';
 import QuoteModal from './components/modals/QuoteModal';
 import { TermsOfUseModal as TermsModal, PrivacyPolicyModal as PrivacyModal } from './components/modals/LegalModals';
 import InfoModal from './components/modals/InfoModal';
+import StreetViewModal from './components/modals/StreetViewModal';
 import SourceAsset from './components/visualizer/SourceAsset';
 import AISectionSeparator from './components/visualizer/AISectionSeparator';
 import VisualizerCanvas from './components/visualizer/VisualizerCanvas';
@@ -64,6 +65,7 @@ const App: React.FC = () => {
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [showEnhancePrompt, setShowEnhancePrompt] = useState(false);
+  const [showStreetViewModal, setShowStreetViewModal] = useState(false);
   
   // --- ADVANCED MODE STATE ---
   const { 
@@ -389,6 +391,7 @@ const App: React.FC = () => {
               onDrop={(e) => { e.preventDefault(); if (e.dataTransfer.files?.[0]) handleUpload(e.dataTransfer.files[0]); }}
               onDragOver={(e) => e.preventDefault()}
               onReplaceClick={() => fileInputRef.current?.click()}
+              onOpenStreetView={() => setShowStreetViewModal(true)}
               imageOptimizeInfo={imageOptimizeInfo}
               showEnhancePrompt={showEnhancePrompt}
               setShowEnhancePrompt={setShowEnhancePrompt}
@@ -670,6 +673,14 @@ const App: React.FC = () => {
       <TermsModal isOpen={showTermsModal} onClose={() => setShowTermsModal(false)} />
       <PrivacyModal isOpen={showPrivacyModal} onClose={() => setShowPrivacyModal(false)} />
       <InfoModal isOpen={showInfoModal} onClose={() => setShowInfoModal(false)} />
+      <StreetViewModal 
+        isOpen={showStreetViewModal} 
+        onClose={() => setShowStreetViewModal(false)} 
+        onCapture={(file) => {
+          handleUpload(file);
+          setShowStreetViewModal(false);
+        }}
+      />
     </div>
   );
 };

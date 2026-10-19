@@ -1,5 +1,5 @@
 import React from 'react';
-import { Upload, X, Check, Wand2, Camera, Loader2 } from 'lucide-react';
+import { Upload, X, Check, Wand2, Camera, Loader2, MapPin } from 'lucide-react';
 
 interface SourceAssetProps {
   selectedImage: string | null;
@@ -7,6 +7,7 @@ interface SourceAssetProps {
   onDrop: (e: React.DragEvent) => void;
   onDragOver: (e: React.DragEvent) => void;
   onReplaceClick: () => void;
+  onOpenStreetView?: () => void;
   imageOptimizeInfo: string | null;
   showEnhancePrompt: boolean;
   setShowEnhancePrompt: (show: boolean) => void;
@@ -26,6 +27,7 @@ const SourceAsset: React.FC<SourceAssetProps> = ({
   onDrop,
   onDragOver,
   onReplaceClick,
+  onOpenStreetView,
   imageOptimizeInfo,
   showEnhancePrompt,
   setShowEnhancePrompt,
@@ -85,62 +87,87 @@ const SourceAsset: React.FC<SourceAssetProps> = ({
               <div className="relative w-full rounded-md overflow-hidden shadow-inner bg-[#0F172A] group">
                 <img src={selectedImage} alt="Uploaded" className="w-full h-auto max-h-72 object-contain" />
                 {/* Desktop hover overlay (hidden on mobile to prevent blocking photo) */}
-                <div className="absolute inset-0 bg-[#0F172A]/75 hidden sm:flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="absolute inset-0 bg-[#0F172A]/85 hidden sm:flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button
                     onClick={onReplaceClick}
                     className="flex items-center gap-1.5 bg-[#3B82F6] hover:bg-[#2563EB] text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full transition-colors shadow-lg"
                   >
-                    <Upload className="w-3 h-3" /> Replace Photo
+                    <Upload className="w-3 h-3" /> Replace
                   </button>
                   <button
                     onClick={() => (camRef as React.RefObject<HTMLInputElement>).current?.click()}
                     className="flex items-center gap-1.5 bg-[#0F172A] hover:bg-[#1E293B] border border-[#334155] text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full transition-colors"
                   >
-                    <Camera className="w-3 h-3" /> Take New Photo
+                    <Camera className="w-3 h-3" /> Retake
                   </button>
+                  {onOpenStreetView && (
+                    <button
+                      onClick={onOpenStreetView}
+                      className="flex items-center gap-1.5 bg-[#18A9D9]/20 hover:bg-[#18A9D9]/30 border border-[#18A9D9]/50 text-[#18A9D9] text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full transition-colors"
+                    >
+                      <MapPin className="w-3 h-3" /> Street View
+                    </button>
+                  )}
                 </div>
               </div>
 
               {/* Dedicated Mobile Action Buttons — large 44px tap targets, keeps thumbnail bright and clear */}
-              <div className="flex sm:hidden gap-2 mt-3">
+              <div className="grid grid-cols-3 gap-2 mt-3 sm:hidden">
                 <button
                   onClick={() => (camRef as React.RefObject<HTMLInputElement>).current?.click()}
-                  className="flex-1 min-h-[44px] flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg bg-[#1E3A8A] text-[#60A5FA] border border-[#3B82F6]/40 text-[11px] font-bold uppercase tracking-wider active:scale-[0.98] shadow-md touch-manipulation"
+                  className="min-h-[44px] flex items-center justify-center gap-1 py-2 px-1.5 rounded-lg bg-[#1E3A8A] text-[#60A5FA] border border-[#3B82F6]/40 text-[10px] font-bold uppercase tracking-wider active:scale-[0.98] shadow-md touch-manipulation"
                 >
-                  <Camera className="w-4 h-4" /> Retake Photo
+                  <Camera className="w-3.5 h-3.5 shrink-0" /> Retake
                 </button>
                 <button
                   onClick={onReplaceClick}
-                  className="flex-1 min-h-[44px] flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg bg-[#111827] text-[#94A3B8] border border-[#1E293B] text-[11px] font-bold uppercase tracking-wider active:scale-[0.98] touch-manipulation"
+                  className="min-h-[44px] flex items-center justify-center gap-1 py-2 px-1.5 rounded-lg bg-[#111827] text-[#94A3B8] border border-[#1E293B] text-[10px] font-bold uppercase tracking-wider active:scale-[0.98] touch-manipulation"
                 >
-                  <Upload className="w-4 h-4" /> Gallery
+                  <Upload className="w-3.5 h-3.5 shrink-0" /> Gallery
                 </button>
+                {onOpenStreetView && (
+                  <button
+                    onClick={onOpenStreetView}
+                    className="min-h-[44px] flex items-center justify-center gap-1 py-2 px-1.5 rounded-lg bg-[#0F172A] text-[#18A9D9] border border-[#18A9D9]/40 text-[10px] font-bold uppercase tracking-wider active:scale-[0.98] touch-manipulation"
+                  >
+                    <MapPin className="w-3.5 h-3.5 shrink-0" /> Street View
+                  </button>
+                )}
               </div>
 
-              <p className="text-[10px] text-[#94A3B8] mt-2 text-center font-medium hidden sm:block">Hover to replace · click camera to shoot live</p>
+              <p className="text-[10px] text-[#94A3B8] mt-2 text-center font-medium hidden sm:block">Hover to replace · click camera to shoot live · or pull from Street View</p>
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center">
               <Upload className="w-8 h-8 text-[#3B82F6] mb-3 opacity-80" />
-              <p className="font-bold text-sm text-[#E2E8F0] text-center">Upload or Take a Photo</p>
-              <p className="text-[10px] text-[#94A3B8] mt-1 text-center">JPG · PNG · WebP — auto-optimized for mobile</p>
+              <p className="font-bold text-sm text-[#E2E8F0] text-center">Upload, Shoot, or Search Street View</p>
+              <p className="text-[10px] text-[#94A3B8] mt-1 text-center">Capture live photo, upload from gallery, or pull home from Street View</p>
 
-              {/* CTA buttons — camera + gallery, optimized for mobile touch */}
-              <div className="mt-4 flex gap-2.5 w-full max-w-xs">
+              {/* CTA buttons — camera + gallery + street view */}
+              <div className="mt-4 grid grid-cols-3 gap-2 w-full max-w-sm">
                 <button
                   onClick={(e) => { e.stopPropagation(); (camRef as React.RefObject<HTMLInputElement>).current?.click(); }}
-                  className="flex-1 min-h-[52px] flex flex-col items-center justify-center gap-1.5 py-3 rounded-xl bg-[#3B82F6]/20 hover:bg-[#3B82F6]/30 active:scale-[0.96] border border-[#3B82F6]/50 transition-all shadow-[0_0_20px_rgba(59,130,246,0.3)] animate-pulse-glow touch-manipulation cursor-pointer"
+                  className="min-h-[56px] flex flex-col items-center justify-center gap-1.5 py-2.5 px-2 rounded-xl bg-[#3B82F6]/20 hover:bg-[#3B82F6]/30 active:scale-[0.96] border border-[#3B82F6]/50 transition-all shadow-[0_0_20px_rgba(59,130,246,0.3)] touch-manipulation cursor-pointer"
                 >
                   <Camera className="w-5 h-5 text-[#60A5FA]" />
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-[#60A5FA]">Camera</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#60A5FA]">Camera</span>
                 </button>
                 <button
                   onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}
-                  className="flex-1 min-h-[52px] flex flex-col items-center justify-center gap-1.5 py-3 rounded-xl bg-[#111827] hover:bg-[#1E293B] active:scale-[0.96] border border-[#334155] hover:border-[#3B82F6]/40 transition-all touch-manipulation cursor-pointer"
+                  className="min-h-[56px] flex flex-col items-center justify-center gap-1.5 py-2.5 px-2 rounded-xl bg-[#111827] hover:bg-[#1E293B] active:scale-[0.96] border border-[#334155] hover:border-[#3B82F6]/40 transition-all touch-manipulation cursor-pointer"
                 >
                   <Upload className="w-5 h-5 text-[#94A3B8]" />
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-[#94A3B8]">Gallery</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#94A3B8]">Gallery</span>
                 </button>
+                {onOpenStreetView && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); onOpenStreetView(); }}
+                    className="min-h-[56px] flex flex-col items-center justify-center gap-1.5 py-2.5 px-2 rounded-xl bg-[#18A9D9]/15 hover:bg-[#18A9D9]/25 active:scale-[0.96] border border-[#18A9D9]/40 hover:border-[#18A9D9] transition-all shadow-[0_0_15px_rgba(24,169,217,0.2)] touch-manipulation cursor-pointer"
+                  >
+                    <MapPin className="w-5 h-5 text-[#18A9D9]" />
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#18A9D9]">Street View</span>
+                  </button>
+                )}
               </div>
 
               <div className="mt-3 hidden sm:flex items-center gap-1.5">
