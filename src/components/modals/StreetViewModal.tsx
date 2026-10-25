@@ -14,6 +14,7 @@ interface StreetViewModalProps {
 }
 
 const PRESET_ADDRESSES = [
+  { label: 'Dover, PA (17315)', address: '35 N Main St, Dover, PA 17315' },
   { label: 'West Chester, PA', address: '120 E Market St, West Chester, PA 19382' },
   { label: 'Pottstown, PA', address: '300 High St, Pottstown, PA 19464' },
   { label: 'Phoenixville, PA', address: '100 N Main St, Phoenixville, PA 19460' },
