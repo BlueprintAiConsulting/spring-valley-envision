@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   X, MapPin, Search, RotateCcw, RotateCw, ChevronUp, ChevronDown, 
-  ZoomIn, ZoomOut, Camera, Loader2, AlertCircle, Sparkles, Check
+  ZoomIn, ZoomOut, Camera, Loader2, AlertCircle, Sparkles, Check,
+  Repeat, Compass, Navigation, Crosshair
 } from 'lucide-react';
 import { loadGoogleMaps, DEFAULT_GOOGLE_MAPS_KEY } from '../../utils/maps';
 
@@ -11,6 +12,13 @@ interface StreetViewModalProps {
   onClose: () => void;
   onCapture: (file: File) => void;
 }
+
+const PRESET_ADDRESSES = [
+  { label: 'West Chester, PA', address: '120 E Market St, West Chester, PA 19382' },
+  { label: 'Pottstown, PA', address: '300 High St, Pottstown, PA 19464' },
+  { label: 'Phoenixville, PA', address: '100 N Main St, Phoenixville, PA 19460' },
+  { label: 'Downingtown, PA', address: '100 E Lancaster Ave, Downingtown, PA 19335' },
+];
 
 export const StreetViewModal: React.FC<StreetViewModalProps> = ({
   isOpen,
@@ -21,12 +29,27 @@ export const StreetViewModal: React.FC<StreetViewModalProps> = ({
   const [isLoadingSdk, setIsLoadingSdk] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [isCapturing, setIsCapturing] = useState(false);
+  const [isShutterActive, setIsShutterActive] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [hasPanorama, setHasPanorama] = useState(false);
+  const [telemetry, setTelemetry] = useState<{ heading: number; pitch: number; zoom: number }>({
+    heading: 45,
+    pitch: 10,
+    zoom: 1,
+  });
 
   const panoContainerRef = useRef<HTMLDivElement>(null);
   const panoramaRef = useRef<any>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const autocompleteRef = useRef<any>(null);
+
+  const getCardinalDirection = (heading: number) => {
+    const normalized = ((Math.round(heading) % 360) + 360) % 360;
+    const dirs = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+    const idx = Math.round(normalized / 45) % 8;
+    return dirs[idx];
+  };
 
   // Initialize or re-attach panorama when modal opens
   useEffect(() => {
@@ -72,6 +95,27 @@ export const StreetViewModal: React.FC<StreetViewModalProps> = ({
               setErrorMessage('No Google Street View imagery available at this specific spot. Try an address on a public street.');
             }
           });
+
+          panoramaRef.current.addListener('pov_changed', () => {
+            const pov = panoramaRef.current?.getPov();
+            if (pov) {
+              const rawHeading = Math.round(((pov.heading % 360) + 360) % 360);
+              const rawPitch = Math.round(pov.pitch);
+              setTelemetry((prev) => ({
+                ...prev,
+                heading: rawHeading,
+                pitch: rawPitch,
+              }));
+            }
+          });
+
+          panoramaRef.current.addListener('zoom_changed', () => {
+            const z = panoramaRef.current?.getZoom() || 1;
+            setTelemetry((prev) => ({
+              ...prev,
+              zoom: Math.round(z * 10) / 10,
+            }));
+          });
         }
       })
       .catch((err) => {
@@ -85,9 +129,109 @@ export const StreetViewModal: React.FC<StreetViewModalProps> = ({
     };
   }, [isOpen]);
 
-  const handleSearchAddress = (e?: React.FormEvent) => {
+  // Initialize Google Places Autocomplete on input
+  useEffect(() => {
+    if (!isOpen) {
+      if (autocompleteRef.current && (window as any).google?.maps?.event) {
+        (window as any).google.maps.event.clearInstanceListeners(autocompleteRef.current);
+      }
+      autocompleteRef.current = null;
+      return;
+    }
+
+    let timer: NodeJS.Timeout;
+
+    const attachAutocomplete = () => {
+      if (!inputRef.current || !(window as any).google?.maps?.places?.Autocomplete) {
+        timer = setTimeout(attachAutocomplete, 100);
+        return;
+      }
+
+      try {
+        const autocomplete = new (window as any).google.maps.places.Autocomplete(
+          inputRef.current,
+          {
+            types: ['address'],
+            componentRestrictions: { country: 'us' },
+            fields: ['geometry', 'formatted_address', 'name', 'address_components'],
+          }
+        );
+        autocompleteRef.current = autocomplete;
+
+        autocomplete.addListener('place_changed', () => {
+          const place = autocomplete.getPlace();
+          if (place && place.geometry?.location) {
+            handlePlaceResolved(place.geometry.location, place.formatted_address || place.name);
+          }
+        });
+      } catch (err) {
+        console.warn('Google Places Autocomplete initialization deferred:', err);
+      }
+    };
+
+    attachAutocomplete();
+
+    return () => {
+      if (timer) clearTimeout(timer);
+      if (autocompleteRef.current && (window as any).google?.maps?.event) {
+        (window as any).google.maps.event.clearInstanceListeners(autocompleteRef.current);
+      }
+      autocompleteRef.current = null;
+    };
+  }, [isOpen]);
+
+  const handlePlaceResolved = (houseLocation: any, displayAddress?: string) => {
+    if (displayAddress) {
+      setAddress(displayAddress);
+    }
+    setIsSearching(true);
+    setErrorMessage(null);
+    setStatusMessage('Aligning camera angle with front facade…');
+
+    const svService = new (window as any).google.maps.StreetViewService();
+    svService.getPanorama(
+      {
+        location: houseLocation,
+        radius: 65,
+        source: (window as any).google.maps.StreetViewSource.OUTDOOR,
+      },
+      (data: any, svStatus: string) => {
+        setIsSearching(false);
+        setStatusMessage(null);
+
+        if (svStatus === (window as any).google.maps.StreetViewStatus.OK && data?.location?.latLng) {
+          const panoLocation = data.location.latLng;
+          const heading = (window as any).google.maps.geometry.spherical.computeHeading(
+            panoLocation,
+            houseLocation
+          );
+          const roundedHeading = Math.round(((heading % 360) + 360) % 360);
+
+          if (panoramaRef.current) {
+            panoramaRef.current.setPosition(panoLocation);
+            panoramaRef.current.setPov({ heading: roundedHeading, pitch: 10 });
+            panoramaRef.current.setZoom(1);
+          }
+          setTelemetry({ heading: roundedHeading, pitch: 10, zoom: 1 });
+          setHasPanorama(true);
+          setStatusMessage('Target locked onto front facade! Drag or use adjustments to perfect framing.');
+        } else {
+          if (panoramaRef.current) {
+            panoramaRef.current.setPosition(houseLocation);
+            panoramaRef.current.setPov({ heading: 0, pitch: 10 });
+          }
+          setTelemetry({ heading: 0, pitch: 10, zoom: 1 });
+          setHasPanorama(true);
+          setStatusMessage('Location loaded. Adjust angle toward the front facade.');
+        }
+      }
+    );
+  };
+
+  const handleSearchAddress = (overrideText?: string, e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (!address.trim()) return;
+    const query = (overrideText !== undefined ? overrideText : address).trim();
+    if (!query) return;
 
     if (!(window as any).google?.maps) {
       setErrorMessage('Google Maps SDK is not loaded yet. Please wait a moment.');
@@ -99,54 +243,17 @@ export const StreetViewModal: React.FC<StreetViewModalProps> = ({
     setStatusMessage('Locating address & calculating street view angle…');
 
     const geocoder = new (window as any).google.maps.Geocoder();
-    geocoder.geocode({ address: address.trim() }, (results: any[], status: string) => {
+    geocoder.geocode({ address: query }, (results: any[], status: string) => {
       if (status !== 'OK' || !results || !results[0]) {
         setIsSearching(false);
         setStatusMessage(null);
-        setErrorMessage(`Could not locate address "${address}". Please check spelling and include city & state.`);
+        setErrorMessage(`Could not locate address "${query}". Please check spelling and include city & state.`);
         return;
       }
 
       const houseLocation = results[0].geometry.location;
       const formattedAddress = results[0].formatted_address;
-      setAddress(formattedAddress);
-
-      // Search for nearest street view panorama to find camera car location
-      const svService = new (window as any).google.maps.StreetViewService();
-      svService.getPanorama(
-        {
-          location: houseLocation,
-          radius: 65,
-          source: (window as any).google.maps.StreetViewSource.OUTDOOR,
-        },
-        (data: any, svStatus: string) => {
-          setIsSearching(false);
-          setStatusMessage(null);
-
-          if (svStatus === (window as any).google.maps.StreetViewStatus.OK && data?.location?.latLng) {
-            const panoLocation = data.location.latLng;
-            // Automatically calculate angle facing directly at the house from the camera!
-            const heading = (window as any).google.maps.geometry.spherical.computeHeading(
-              panoLocation,
-              houseLocation
-            );
-
-            if (panoramaRef.current) {
-              panoramaRef.current.setPosition(panoLocation);
-              panoramaRef.current.setPov({ heading: Math.round(heading), pitch: 10 });
-              panoramaRef.current.setZoom(1);
-            }
-            setHasPanorama(true);
-            setStatusMessage('Centered on front of property! Use controls below or drag to fine-tune framing.');
-          } else {
-            // Fallback: place directly at house geocode coordinates
-            if (panoramaRef.current) {
-              panoramaRef.current.setPosition(houseLocation);
-              panoramaRef.current.setPov({ heading: 0, pitch: 10 });
-            }
-          }
-        }
-      );
+      handlePlaceResolved(houseLocation, formattedAddress);
     });
   };
 
@@ -221,9 +328,15 @@ export const StreetViewModal: React.FC<StreetViewModalProps> = ({
 
         const cleanName = address ? address.replace(/[^a-zA-Z0-9]/g, '-').slice(0, 30) : 'streetview-house';
         const file = new File([blob], `${cleanName}.jpg`, { type: 'image/jpeg' });
-        onCapture(file);
-        setIsCapturing(false);
-        onClose();
+        
+        // Trigger realistic camera shutter flash animation
+        setIsShutterActive(true);
+        setTimeout(() => {
+          onCapture(file);
+          setIsCapturing(false);
+          setIsShutterActive(false);
+          onClose();
+        }, 320);
       }, 'image/jpeg', 0.92);
 
     } catch (err: any) {
@@ -278,18 +391,33 @@ export const StreetViewModal: React.FC<StreetViewModalProps> = ({
               </button>
             </div>
 
-            {/* Address Search Form */}
-            <div className="p-4 bg-[#0F172A] border-b border-[#1E293B] shrink-0">
-              <form onSubmit={handleSearchAddress} className="flex gap-2">
+            {/* Address Search Form with Google Places Autocomplete */}
+            <div className="p-4 bg-[#0D1520] border-b border-[#1E293B] shrink-0">
+              <form onSubmit={(e) => handleSearchAddress(undefined, e)} className="flex gap-2">
                 <div className="relative flex-1">
                   <MapPin className="w-4 h-4 text-[#18A9D9] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                   <input
+                    ref={inputRef}
                     type="text"
                     value={address}
                     onChange={(e) => setAddress(e.target.value)}
-                    placeholder="Enter street address (e.g. 200 E Market St, West Chester, PA)"
-                    className="w-full bg-[#080D14] border border-[#223448] focus:border-[#18A9D9] rounded-xl pl-10 pr-4 py-2.5 text-xs sm:text-sm text-white placeholder-[#475569] outline-none transition-all shadow-inner"
+                    placeholder="Search house address with Google autofill…"
+                    className="w-full bg-[#080D14] border border-[#223448] focus:border-[#18A9D9] rounded-xl pl-10 pr-9 py-2.5 text-xs sm:text-sm text-white placeholder-[#475569] outline-none transition-all shadow-inner"
+                    autoComplete="off"
                   />
+                  {address.trim().length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAddress('');
+                        inputRef.current?.focus();
+                      }}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-[#64748B] hover:text-white p-1 rounded-md transition-colors"
+                      title="Clear address"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
                 </div>
                 <button
                   type="submit"
@@ -300,6 +428,26 @@ export const StreetViewModal: React.FC<StreetViewModalProps> = ({
                   <span className="hidden sm:inline">Search</span>
                 </button>
               </form>
+
+              {/* Quick Territory Preset Chips */}
+              <div className="flex items-center gap-1.5 mt-2.5 overflow-x-auto pb-0.5 text-[11px] no-scrollbar">
+                <span className="text-[#64748B] text-[10px] uppercase font-bold tracking-wider shrink-0 mr-1 flex items-center gap-1">
+                  <Sparkles className="w-3 h-3 text-[#18A9D9]" /> Presets:
+                </span>
+                {PRESET_ADDRESSES.map((preset) => (
+                  <button
+                    key={preset.address}
+                    type="button"
+                    onClick={() => {
+                      setAddress(preset.address);
+                      handleSearchAddress(preset.address);
+                    }}
+                    className="px-2.5 py-1 rounded-lg bg-[#131F2E] hover:bg-[#1E293B] border border-[#223448] hover:border-[#18A9D9]/50 text-[#94A3B8] hover:text-white shrink-0 transition-all text-[11px]"
+                  >
+                    {preset.label}
+                  </button>
+                ))}
+              </div>
 
               {/* Status / Feedback Banner */}
               {statusMessage && (
@@ -333,75 +481,158 @@ export const StreetViewModal: React.FC<StreetViewModalProps> = ({
                 style={{ visibility: isLoadingSdk ? 'hidden' : 'visible' }}
               />
 
-              {/* Aiming Reticle Overlay for Framing the Roof/House */}
+              {/* Camera Shutter Flash Animation */}
+              <AnimatePresence>
+                {isShutterActive && (
+                  <motion.div
+                    initial={{ opacity: 0.95 }}
+                    animate={{ opacity: 0 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.35, ease: 'easeOut' }}
+                    className="absolute inset-0 bg-white z-40 pointer-events-none"
+                  />
+                )}
+              </AnimatePresence>
+
+              {/* Viewfinder Reticle & HUD Overlay */}
               {hasPanorama && (
-                <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-                  <div className="border border-white/20 rounded-2xl w-4/5 h-4/5 shadow-[0_0_0_9999px_rgba(0,0,0,0.25)] flex flex-col justify-between p-3">
-                    <span className="text-[10px] uppercase font-bold tracking-widest text-white/60 bg-black/50 px-2 py-0.5 rounded self-start backdrop-blur-sm">
-                      Framing Target
-                    </span>
-                    <span className="text-[10px] font-medium text-white/70 bg-black/60 px-3 py-1 rounded-full self-center backdrop-blur-sm">
-                      Align roof and siding within box · Drag to rotate
-                    </span>
+                <div className="absolute inset-0 pointer-events-none flex items-center justify-center p-3 sm:p-5">
+                  {/* Live Telemetry HUD (Top-Left) */}
+                  <div className="absolute top-3 left-3 flex flex-wrap items-center gap-1.5 z-20">
+                    <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-black/80 border border-[#18A9D9]/40 backdrop-blur-md shadow-lg">
+                      <Navigation 
+                        className="w-3.5 h-3.5 text-[#18A9D9] transition-transform duration-200" 
+                        style={{ transform: `rotate(${telemetry.heading}deg)` }} 
+                      />
+                      <span className="text-[11px] font-mono font-bold text-white tracking-wide">
+                        {telemetry.heading}° {getCardinalDirection(telemetry.heading)}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-black/80 border border-[#223448] backdrop-blur-md text-[11px] font-mono text-[#94A3B8]">
+                      <span>Pitch:</span>
+                      <span className="text-white font-semibold">
+                        {telemetry.pitch > 0 ? `+${telemetry.pitch}°` : `${telemetry.pitch}°`}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-black/80 border border-[#223448] backdrop-blur-md text-[11px] font-mono text-[#94A3B8]">
+                      <span>Zoom:</span>
+                      <span className="text-white font-semibold">{telemetry.zoom}x</span>
+                    </div>
+
+                    <div className="hidden sm:flex items-center gap-1 px-2 py-1 rounded-lg bg-[#18A9D9]/15 border border-[#18A9D9]/30 backdrop-blur-md text-[10px] font-bold uppercase tracking-wider text-[#18A9D9]">
+                      <Crosshair className="w-3 h-3 animate-pulse" />
+                      <span>Target Lock</span>
+                    </div>
+                  </div>
+
+                  {/* Viewfinder Bounding Box with Corner Reticle Brackets */}
+                  <div className="relative w-[85%] h-[80%] max-w-[700px] border border-white/20 rounded-2xl shadow-[0_0_0_9999px_rgba(0,0,0,0.30)] flex flex-col justify-between p-3.5">
+                    {/* Corner Brackets */}
+                    <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-[#18A9D9] rounded-tl-xl -mt-0.5 -ml-0.5" />
+                    <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-[#18A9D9] rounded-tr-xl -mt-0.5 -mr-0.5" />
+                    <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-[#18A9D9] rounded-bl-xl -mb-0.5 -ml-0.5" />
+                    <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-[#18A9D9] rounded-br-xl -mb-0.5 -mr-0.5" />
+
+                    {/* Center Crosshair */}
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-40">
+                      <div className="w-6 h-0.5 bg-white/60" />
+                      <div className="h-6 w-0.5 bg-white/60 absolute" />
+                    </div>
+
+                    {/* Viewfinder Label Pill */}
+                    <div className="self-end">
+                      <span className="text-[10px] uppercase font-bold tracking-widest text-[#18A9D9] bg-black/70 border border-[#18A9D9]/30 px-2.5 py-0.5 rounded-full backdrop-blur-sm shadow">
+                        Facade Framing
+                      </span>
+                    </div>
+
+                    {/* Guide Caption */}
+                    <div className="self-center">
+                      <span className="text-[10px] sm:text-xs font-medium text-white/90 bg-black/75 border border-white/10 px-3.5 py-1 rounded-full backdrop-blur-md shadow-lg text-center inline-block">
+                        Center roof and siding inside viewfinder · Drag to rotate
+                      </span>
+                    </div>
                   </div>
                 </div>
               )}
             </div>
 
             {/* Panorama Fine-Tuning Controls Bar */}
-            <div className="px-4 py-2.5 bg-[#0F172A] border-t border-[#1E293B] flex flex-wrap items-center justify-between gap-2 shrink-0">
-              <div className="flex items-center gap-1.5 text-xs text-[#94A3B8]">
-                <span className="hidden sm:inline font-bold uppercase tracking-wider text-[10px] text-[#64748B] mr-1">
-                  Adjust View:
-                </span>
+            <div className="px-4 py-3 bg-[#0E1622] border-t border-[#1E293B] flex flex-wrap items-center justify-between gap-2.5 shrink-0">
+              <div className="flex flex-wrap items-center gap-1.5 text-xs">
                 <button
                   type="button"
                   onClick={() => adjustHeading(-15)}
-                  className="px-2.5 py-1.5 rounded-lg bg-[#1E293B] hover:bg-[#334155] text-white flex items-center gap-1 text-[11px] font-medium transition-colors min-h-[36px]"
-                  title="Rotate Left"
+                  className="px-2.5 py-1.5 rounded-lg bg-[#162334] hover:bg-[#1E2F45] text-white flex items-center gap-1 text-[11px] font-medium transition-colors border border-[#223448] min-h-[38px]"
+                  title="Rotate Left 15°"
                 >
-                  <RotateCcw className="w-3.5 h-3.5" /> -15°
+                  <RotateCcw className="w-3.5 h-3.5 text-[#18A9D9]" /> -15°
                 </button>
                 <button
                   type="button"
                   onClick={() => adjustHeading(15)}
-                  className="px-2.5 py-1.5 rounded-lg bg-[#1E293B] hover:bg-[#334155] text-white flex items-center gap-1 text-[11px] font-medium transition-colors min-h-[36px]"
-                  title="Rotate Right"
+                  className="px-2.5 py-1.5 rounded-lg bg-[#162334] hover:bg-[#1E2F45] text-white flex items-center gap-1 text-[11px] font-medium transition-colors border border-[#223448] min-h-[38px]"
+                  title="Rotate Right 15°"
                 >
-                  <RotateCw className="w-3.5 h-3.5" /> +15°
+                  <RotateCw className="w-3.5 h-3.5 text-[#18A9D9]" /> +15°
+                </button>
+                <button
+                  type="button"
+                  onClick={() => adjustHeading(180)}
+                  className="px-2.5 py-1.5 rounded-lg bg-[#162334] hover:bg-[#1E2F45] text-white flex items-center gap-1.5 text-[11px] font-medium transition-colors border border-[#223448] min-h-[38px]"
+                  title="Turn Around 180°"
+                >
+                  <Repeat className="w-3.5 h-3.5 text-[#38BDF8]" /> 180° Flip
                 </button>
                 <button
                   type="button"
                   onClick={() => adjustPitch(5)}
-                  className="px-2.5 py-1.5 rounded-lg bg-[#1E293B] hover:bg-[#334155] text-white flex items-center gap-1 text-[11px] font-medium transition-colors min-h-[36px]"
-                  title="Tilt Up"
+                  className="px-2 py-1.5 rounded-lg bg-[#162334] hover:bg-[#1E2F45] text-white flex items-center gap-1 text-[11px] font-medium transition-colors border border-[#223448] min-h-[38px]"
+                  title="Tilt Up 5°"
                 >
-                  <ChevronUp className="w-3.5 h-3.5" /> Tilt Up
+                  <ChevronUp className="w-3.5 h-3.5" /> Up
                 </button>
                 <button
                   type="button"
                   onClick={() => adjustPitch(-5)}
-                  className="px-2.5 py-1.5 rounded-lg bg-[#1E293B] hover:bg-[#334155] text-white flex items-center gap-1 text-[11px] font-medium transition-colors min-h-[36px]"
-                  title="Tilt Down"
+                  className="px-2 py-1.5 rounded-lg bg-[#162334] hover:bg-[#1E2F45] text-white flex items-center gap-1 text-[11px] font-medium transition-colors border border-[#223448] min-h-[38px]"
+                  title="Tilt Down 5°"
                 >
-                  <ChevronDown className="w-3.5 h-3.5" /> Tilt Down
+                  <ChevronDown className="w-3.5 h-3.5" /> Down
                 </button>
                 <button
                   type="button"
-                  onClick={() => adjustZoom(1)}
-                  className="p-1.5 rounded-lg bg-[#1E293B] hover:bg-[#334155] text-white transition-colors min-h-[36px] min-w-[36px] flex items-center justify-center"
-                  title="Zoom In"
+                  onClick={() => {
+                    if (panoramaRef.current) {
+                      const pov = panoramaRef.current.getPov();
+                      panoramaRef.current.setPov({ ...pov, pitch: 0 });
+                    }
+                  }}
+                  className="px-2 py-1.5 rounded-lg bg-[#162334] hover:bg-[#1E2F45] text-white flex items-center gap-1 text-[11px] font-medium transition-colors border border-[#223448] min-h-[38px]"
+                  title="Reset Level (0° Pitch)"
                 >
-                  <ZoomIn className="w-3.5 h-3.5" />
+                  <Compass className="w-3.5 h-3.5 text-[#34D399]" /> Level
                 </button>
-                <button
-                  type="button"
-                  onClick={() => adjustZoom(-1)}
-                  className="p-1.5 rounded-lg bg-[#1E293B] hover:bg-[#334155] text-white transition-colors min-h-[36px] min-w-[36px] flex items-center justify-center"
-                  title="Zoom Out"
-                >
-                  <ZoomOut className="w-3.5 h-3.5" />
-                </button>
+                <div className="flex items-center gap-1 border-l border-[#223448] pl-1.5">
+                  <button
+                    type="button"
+                    onClick={() => adjustZoom(1)}
+                    className="p-1.5 rounded-lg bg-[#162334] hover:bg-[#1E2F45] text-white transition-colors border border-[#223448] min-h-[38px] min-w-[38px] flex items-center justify-center"
+                    title="Zoom In"
+                  >
+                    <ZoomIn className="w-3.5 h-3.5 text-[#18A9D9]" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => adjustZoom(-1)}
+                    className="p-1.5 rounded-lg bg-[#162334] hover:bg-[#1E2F45] text-white transition-colors border border-[#223448] min-h-[38px] min-w-[38px] flex items-center justify-center"
+                    title="Zoom Out"
+                  >
+                    <ZoomOut className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </div>
 
               {/* Action Buttons */}
@@ -409,7 +640,7 @@ export const StreetViewModal: React.FC<StreetViewModalProps> = ({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="flex-1 sm:flex-none px-4 py-2 rounded-xl text-xs font-semibold text-[#94A3B8] hover:text-white bg-[#131F2E] hover:bg-[#1E293B] border border-[#223448] transition-colors min-h-[44px]"
+                  className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl text-xs font-semibold text-[#94A3B8] hover:text-white bg-[#131F2E] hover:bg-[#1E293B] border border-[#223448] transition-colors min-h-[44px]"
                 >
                   Cancel
                 </button>
@@ -417,7 +648,7 @@ export const StreetViewModal: React.FC<StreetViewModalProps> = ({
                   type="button"
                   onClick={handleCapture}
                   disabled={isCapturing || !hasPanorama}
-                  className="flex-1 sm:flex-none px-6 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider text-white bg-[#83C248] hover:bg-[#93D553] active:scale-95 disabled:opacity-50 transition-all shadow-[0_0_20px_rgba(131,194,72,0.45)] flex items-center justify-center gap-2 min-h-[44px]"
+                  className="flex-1 sm:flex-none px-5 sm:px-6 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider text-white bg-[#83C248] hover:bg-[#93D553] active:scale-95 disabled:opacity-50 transition-all shadow-[0_0_20px_rgba(131,194,72,0.45)] flex items-center justify-center gap-2 min-h-[44px]"
                 >
                   {isCapturing ? (
                     <>

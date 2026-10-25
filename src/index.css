@@ -78,3 +78,59 @@ select option {
 .cursor-ew-resize {
   touch-action: none;
 }
+
+/* ────── Google Places Autocomplete Dark Theme ────── */
+.pac-container {
+  background-color: #0B131E !important;
+  border: 1px solid #223448 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8) !important;
+  font-family: inherit !important;
+  margin-top: 6px !important;
+  z-index: 99999 !important;
+  overflow: hidden !important;
+  padding: 4px 0 !important;
+}
+
+.pac-item {
+  border-top: 1px solid #1E293B !important;
+  color: #94A3B8 !important;
+  cursor: pointer !important;
+  font-size: 13px !important;
+  line-height: 36px !important;
+  padding: 4px 14px !important;
+  transition: all 0.15s ease !important;
+}
+
+.pac-item:first-child {
+  border-top: none !important;
+}
+
+.pac-item:hover,
+.pac-item-selected {
+  background-color: #131F2E !important;
+  color: #FFFFFF !important;
+}
+
+.pac-item-query {
+  color: #FFFFFF !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  padding-right: 6px !important;
+}
+
+.pac-matched {
+  color: #18A9D9 !important;
+  font-weight: 700 !important;
+}
+
+.pac-icon {
+  filter: invert(0.8) hue-rotate(160deg) !important;
+  margin-top: 9px !important;
+}
+
+.pac-logo::after {
+  filter: invert(0.7) !important;
+  padding: 6px 10px !important;
+}
+
