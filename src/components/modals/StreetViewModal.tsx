@@ -101,11 +101,16 @@ export const StreetViewModal: React.FC<StreetViewModalProps> = ({
             position: initialPos,
             pov: initialPov,
             zoom: initialZoom,
-            addressControl: false,
-            showRoadLabels: false,
+            clickToGo: false,            // Prevents scene clicks from teleporting away or crashing on invalid panos
+            enableCloseButton: false,    // Disables Google's built-in close button that hides the panorama
+            linksControl: false,         // Disables road navigation arrows so view stays anchored to the property
+            panControl: false,           // Disables default compass overlay to avoid event conflicts with custom HUD
+            zoomControl: false,          // Disables default zoom buttons in favor of bottom control bar
+            addressControl: false,       // Hides street address badge
+            showRoadLabels: false,       // Hides road labels
             motionTracking: false,
             motionTrackingControl: false,
-            fullscreenControl: false,
+            fullscreenControl: false,    // Disables fullscreen toggle
           }
         );
         panoramaRef.current = pano;
@@ -115,9 +120,9 @@ export const StreetViewModal: React.FC<StreetViewModalProps> = ({
           if (status === 'OK') {
             setHasPanorama(true);
             setErrorMessage(null);
-          } else {
-            setHasPanorama(false);
-            setErrorMessage('No Google Street View imagery available at this specific spot. Try an address on a public street.');
+          } else if (status === 'ZERO_RESULTS') {
+            // Keep existing panorama loaded if user clicks or navigates off road
+            setErrorMessage('Street View imagery not available at this exact point.');
           }
         });
 
@@ -427,6 +432,18 @@ export const StreetViewModal: React.FC<StreetViewModalProps> = ({
     }
   };
 
+  // Close on Escape key
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -435,7 +452,12 @@ export const StreetViewModal: React.FC<StreetViewModalProps> = ({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md p-3 sm:p-4"
-          onClick={onClose}
+          onClick={(e) => {
+            // Strictly guard backdrop click: only close if user intentionally clicked outer margin directly
+            if (e.target === e.currentTarget) {
+              onClose();
+            }
+          }}
         >
           <motion.div
             initial={{ scale: 0.96, opacity: 0 }}
@@ -623,8 +645,11 @@ export const StreetViewModal: React.FC<StreetViewModalProps> = ({
               {/* The interactive Street View Panorama element */}
               <div
                 ref={panoContainerRef}
-                className="w-full h-full absolute inset-0"
+                className="w-full h-full absolute inset-0 select-none"
                 style={{ visibility: isLoadingSdk ? 'hidden' : 'visible' }}
+                onClick={(e) => e.stopPropagation()}
+                onMouseDown={(e) => e.stopPropagation()}
+                onMouseUp={(e) => e.stopPropagation()}
               />
 
               {/* Camera Shutter Flash Animation */}
