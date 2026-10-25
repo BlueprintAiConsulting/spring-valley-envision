@@ -20,6 +20,14 @@ const PRESET_ADDRESSES = [
   { label: 'Downingtown, PA', address: '100 E Lancaster Ave, Downingtown, PA 19335' },
 ];
 
+interface SuggestionItem {
+  formatted: string;
+  mainText: string;
+  subText: string;
+  lat?: number;
+  lng?: number;
+}
+
 export const StreetViewModal: React.FC<StreetViewModalProps> = ({
   isOpen,
   onClose,
@@ -39,10 +47,18 @@ export const StreetViewModal: React.FC<StreetViewModalProps> = ({
     zoom: 1,
   });
 
+  // Built-in address autocomplete state
+  const [suggestions, setSuggestions] = useState<SuggestionItem[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [isFetchingSuggestions, setIsFetchingSuggestions] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(-1);
+
   const panoContainerRef = useRef<HTMLDivElement>(null);
   const panoramaRef = useRef<any>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const autocompleteRef = useRef<any>(null);
+  const lastLocationRef = useRef<any>(null);
+  const lastPovRef = useRef<any>({ heading: 45, pitch: 10 });
+  const lastZoomRef = useRef<number>(1);
 
   const getCardinalDirection = (heading: number) => {
     const normalized = ((Math.round(heading) % 360) + 360) % 360;
@@ -56,6 +72,13 @@ export const StreetViewModal: React.FC<StreetViewModalProps> = ({
     if (!isOpen) {
       setErrorMessage(null);
       setStatusMessage(null);
+      setShowSuggestions(false);
+      // Clean up panorama reference on modal close so subsequent opens re-mount fresh
+      if (panoramaRef.current && (window as any).google?.maps?.event) {
+        (window as any).google.maps.event.clearInstanceListeners(panoramaRef.current);
+      }
+      panoramaRef.current = null;
+      setHasPanorama(false);
       return;
     }
 
@@ -67,56 +90,64 @@ export const StreetViewModal: React.FC<StreetViewModalProps> = ({
         if (!isMounted || !panoContainerRef.current) return;
         setIsLoadingSdk(false);
 
-        // Default location: Chester County, PA (Spring Valley Roofing territory)
-        const initialPos = { lat: 39.9587, lng: -75.6053 };
+        // Chester County, PA default or restore last viewed position
+        const initialPos = lastLocationRef.current || { lat: 39.9587, lng: -75.6053 };
+        const initialPov = lastPovRef.current || { heading: 45, pitch: 10 };
+        const initialZoom = lastZoomRef.current || 1;
 
-        if (!panoramaRef.current) {
-          panoramaRef.current = new (window as any).google.maps.StreetViewPanorama(
-            panoContainerRef.current,
-            {
-              position: initialPos,
-              pov: { heading: 45, pitch: 10 },
-              zoom: 1,
-              addressControl: false,
-              showRoadLabels: false,
-              motionTracking: false,
-              motionTrackingControl: false,
-              fullscreenControl: false,
-            }
-          );
+        const pano = new (window as any).google.maps.StreetViewPanorama(
+          panoContainerRef.current,
+          {
+            position: initialPos,
+            pov: initialPov,
+            zoom: initialZoom,
+            addressControl: false,
+            showRoadLabels: false,
+            motionTracking: false,
+            motionTrackingControl: false,
+            fullscreenControl: false,
+          }
+        );
+        panoramaRef.current = pano;
 
-          panoramaRef.current.addListener('status_changed', () => {
-            const status = panoramaRef.current.getStatus();
-            if (status === 'OK') {
-              setHasPanorama(true);
-              setErrorMessage(null);
-            } else {
-              setHasPanorama(false);
-              setErrorMessage('No Google Street View imagery available at this specific spot. Try an address on a public street.');
-            }
-          });
+        pano.addListener('status_changed', () => {
+          const status = pano.getStatus();
+          if (status === 'OK') {
+            setHasPanorama(true);
+            setErrorMessage(null);
+          } else {
+            setHasPanorama(false);
+            setErrorMessage('No Google Street View imagery available at this specific spot. Try an address on a public street.');
+          }
+        });
 
-          panoramaRef.current.addListener('pov_changed', () => {
-            const pov = panoramaRef.current?.getPov();
-            if (pov) {
-              const rawHeading = Math.round(((pov.heading % 360) + 360) % 360);
-              const rawPitch = Math.round(pov.pitch);
-              setTelemetry((prev) => ({
-                ...prev,
-                heading: rawHeading,
-                pitch: rawPitch,
-              }));
-            }
-          });
+        pano.addListener('position_changed', () => {
+          const pos = pano.getPosition();
+          if (pos) lastLocationRef.current = pos;
+        });
 
-          panoramaRef.current.addListener('zoom_changed', () => {
-            const z = panoramaRef.current?.getZoom() || 1;
+        pano.addListener('pov_changed', () => {
+          const pov = pano.getPov();
+          if (pov) {
+            lastPovRef.current = pov;
+            const rawHeading = Math.round(((pov.heading % 360) + 360) % 360);
+            const rawPitch = Math.round(pov.pitch);
             setTelemetry((prev) => ({
               ...prev,
-              zoom: Math.round(z * 10) / 10,
+              heading: rawHeading,
+              pitch: rawPitch,
             }));
-          });
-        }
+          }
+        });
+
+        pano.addListener('zoom_changed', () => {
+          const z = pano.getZoom() || 1;
+          lastZoomRef.current = z;
+          setTelemetry((prev) => ({
+            ...prev,
+            zoom: Math.round(z * 10) / 10,
+          }));
+        });
       })
       .catch((err) => {
         if (!isMounted) return;
@@ -126,59 +157,108 @@ export const StreetViewModal: React.FC<StreetViewModalProps> = ({
 
     return () => {
       isMounted = false;
+      if (panoramaRef.current && (window as any).google?.maps?.event) {
+        (window as any).google.maps.event.clearInstanceListeners(panoramaRef.current);
+      }
+      panoramaRef.current = null;
     };
   }, [isOpen]);
 
-  // Initialize Google Places Autocomplete on input
+  // Real-time address autofill suggestions
   useEffect(() => {
     if (!isOpen) {
-      if (autocompleteRef.current && (window as any).google?.maps?.event) {
-        (window as any).google.maps.event.clearInstanceListeners(autocompleteRef.current);
-      }
-      autocompleteRef.current = null;
+      setSuggestions([]);
+      setShowSuggestions(false);
       return;
     }
 
-    let timer: NodeJS.Timeout;
+    const query = address.trim();
+    if (query.length < 3) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
 
-    const attachAutocomplete = () => {
-      if (!inputRef.current || !(window as any).google?.maps?.places?.Autocomplete) {
-        timer = setTimeout(attachAutocomplete, 100);
-        return;
-      }
+    const timer = setTimeout(async () => {
+      setIsFetchingSuggestions(true);
 
       try {
-        const autocomplete = new (window as any).google.maps.places.Autocomplete(
-          inputRef.current,
-          {
-            types: ['address'],
-            componentRestrictions: { country: 'us' },
-            fields: ['geometry', 'formatted_address', 'name', 'address_components'],
+        const res = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=5&lang=en`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data?.features && data.features.length > 0) {
+            const items: SuggestionItem[] = data.features.map((f: any) => {
+              const p = f.properties || {};
+              const main = [p.housenumber, p.street || p.name].filter(Boolean).join(' ') || p.name || query;
+              const sub = [p.city, p.state, p.postcode].filter(Boolean).join(', ');
+              const full = sub ? `${main}, ${sub}` : main;
+              return {
+                formatted: full,
+                mainText: main,
+                subText: sub,
+                lat: f.geometry?.coordinates?.[1],
+                lng: f.geometry?.coordinates?.[0],
+              };
+            });
+            setSuggestions(items);
+            setShowSuggestions(true);
+            setSelectedIndex(-1);
+            setIsFetchingSuggestions(false);
+            return;
           }
-        );
-        autocompleteRef.current = autocomplete;
-
-        autocomplete.addListener('place_changed', () => {
-          const place = autocomplete.getPlace();
-          if (place && place.geometry?.location) {
-            handlePlaceResolved(place.geometry.location, place.formatted_address || place.name);
-          }
-        });
+        }
       } catch (err) {
-        console.warn('Google Places Autocomplete initialization deferred:', err);
+        // Fallback to Geocoder below
       }
-    };
 
-    attachAutocomplete();
-
-    return () => {
-      if (timer) clearTimeout(timer);
-      if (autocompleteRef.current && (window as any).google?.maps?.event) {
-        (window as any).google.maps.event.clearInstanceListeners(autocompleteRef.current);
+      // Geocoder fallback if photon had no results
+      if ((window as any).google?.maps?.Geocoder) {
+        try {
+          const geocoder = new (window as any).google.maps.Geocoder();
+          geocoder.geocode({ address: query, componentRestrictions: { country: 'US' } }, (results: any[], status: string) => {
+            setIsFetchingSuggestions(false);
+            if (status === 'OK' && results && results.length > 0) {
+              const items: SuggestionItem[] = results.slice(0, 4).map((r: any) => {
+                const parts = r.formatted_address.split(',');
+                const main = parts[0] || r.formatted_address;
+                const sub = parts.slice(1).join(',').trim();
+                return {
+                  formatted: r.formatted_address,
+                  mainText: main,
+                  subText: sub,
+                  lat: r.geometry?.location?.lat(),
+                  lng: r.geometry?.location?.lng(),
+                };
+              });
+              setSuggestions(items);
+              setShowSuggestions(true);
+              setSelectedIndex(-1);
+            }
+          });
+          return;
+        } catch {
+          // ignore
+        }
       }
-      autocompleteRef.current = null;
-    };
-  }, [isOpen]);
+
+      setIsFetchingSuggestions(false);
+    }, 200);
+
+    return () => clearTimeout(timer);
+  }, [address, isOpen]);
+
+  const handleSelectSuggestion = (item: SuggestionItem) => {
+    setAddress(item.formatted);
+    setShowSuggestions(false);
+    setSuggestions([]);
+
+    if (item.lat !== undefined && item.lng !== undefined && (window as any).google?.maps) {
+      const location = new (window as any).google.maps.LatLng(item.lat, item.lng);
+      handlePlaceResolved(location, item.formatted);
+    } else {
+      handleSearchAddress(item.formatted);
+    }
+  };
 
   const handlePlaceResolved = (houseLocation: any, displayAddress?: string) => {
     if (displayAddress) {
@@ -391,9 +471,20 @@ export const StreetViewModal: React.FC<StreetViewModalProps> = ({
               </button>
             </div>
 
-            {/* Address Search Form with Google Places Autocomplete */}
+            {/* Address Search Form with Real-Time Address Autofill */}
             <div className="p-4 bg-[#0D1520] border-b border-[#1E293B] shrink-0">
-              <form onSubmit={(e) => handleSearchAddress(undefined, e)} className="flex gap-2">
+              <form 
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (selectedIndex >= 0 && suggestions[selectedIndex]) {
+                    handleSelectSuggestion(suggestions[selectedIndex]);
+                  } else {
+                    setShowSuggestions(false);
+                    handleSearchAddress(undefined, e);
+                  }
+                }} 
+                className="flex gap-2"
+              >
                 <div className="relative flex-1">
                   <MapPin className="w-4 h-4 text-[#18A9D9] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                   <input
@@ -401,15 +492,38 @@ export const StreetViewModal: React.FC<StreetViewModalProps> = ({
                     type="text"
                     value={address}
                     onChange={(e) => setAddress(e.target.value)}
-                    placeholder="Search house address with Google autofill…"
-                    className="w-full bg-[#080D14] border border-[#223448] focus:border-[#18A9D9] rounded-xl pl-10 pr-9 py-2.5 text-xs sm:text-sm text-white placeholder-[#475569] outline-none transition-all shadow-inner"
+                    onFocus={() => {
+                      if (suggestions.length > 0) setShowSuggestions(true);
+                    }}
+                    onBlur={() => {
+                      setTimeout(() => setShowSuggestions(false), 250);
+                    }}
+                    onKeyDown={(e) => {
+                      if (showSuggestions && suggestions.length > 0) {
+                        if (e.key === 'ArrowDown') {
+                          e.preventDefault();
+                          setSelectedIndex((prev) => Math.min(prev + 1, suggestions.length - 1));
+                        } else if (e.key === 'ArrowUp') {
+                          e.preventDefault();
+                          setSelectedIndex((prev) => Math.max(prev - 1, 0));
+                        } else if (e.key === 'Escape') {
+                          setShowSuggestions(false);
+                        }
+                      }
+                    }}
+                    placeholder="Search house address (e.g. 120 E Market St, West Chester, PA)…"
+                    className="w-full bg-[#080D14] border border-[#223448] focus:border-[#18A9D9] rounded-xl pl-10 pr-10 py-2.5 text-xs sm:text-sm text-white placeholder-[#475569] outline-none transition-all shadow-inner"
                     autoComplete="off"
                   />
-                  {address.trim().length > 0 && (
+                  {isFetchingSuggestions ? (
+                    <Loader2 className="w-3.5 h-3.5 text-[#18A9D9] animate-spin absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  ) : address.trim().length > 0 ? (
                     <button
                       type="button"
                       onClick={() => {
                         setAddress('');
+                        setSuggestions([]);
+                        setShowSuggestions(false);
                         inputRef.current?.focus();
                       }}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-[#64748B] hover:text-white p-1 rounded-md transition-colors"
@@ -417,6 +531,38 @@ export const StreetViewModal: React.FC<StreetViewModalProps> = ({
                     >
                       <X className="w-3.5 h-3.5" />
                     </button>
+                  ) : null}
+
+                  {/* Real-Time Address Suggestions Dropdown */}
+                  {showSuggestions && suggestions.length > 0 && (
+                    <div className="absolute top-full left-0 right-0 mt-1.5 bg-[#0B131E] border border-[#223448] rounded-xl shadow-[0_12px_36px_rgba(0,0,0,0.85)] overflow-hidden z-50 divide-y divide-[#1A2634]">
+                      {suggestions.map((item, idx) => (
+                        <div
+                          key={`${item.formatted}-${idx}`}
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            handleSelectSuggestion(item);
+                          }}
+                          className={`px-3.5 py-2.5 flex items-start gap-2.5 cursor-pointer transition-colors ${
+                            idx === selectedIndex 
+                              ? 'bg-[#18A9D9]/20 text-white' 
+                              : 'hover:bg-[#131F2E] text-[#94A3B8] hover:text-white'
+                          }`}
+                        >
+                          <MapPin className="w-4 h-4 text-[#18A9D9] shrink-0 mt-0.5" />
+                          <div className="flex-1 min-w-0">
+                            <div className="text-xs sm:text-sm font-semibold text-white truncate">
+                              {item.mainText}
+                            </div>
+                            {item.subText && (
+                              <div className="text-[11px] text-[#64748B] truncate mt-0.5">
+                                {item.subText}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   )}
                 </div>
                 <button
