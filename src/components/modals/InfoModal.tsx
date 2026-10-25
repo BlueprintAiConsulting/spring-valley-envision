@@ -19,6 +19,9 @@ const InfoModal: React.FC<InfoModalProps> = ({ isOpen, onClose }) => {
           onClick={onClose}
         >
           <motion.div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="info-modal-title"
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.95, opacity: 0 }}
@@ -30,9 +33,13 @@ const InfoModal: React.FC<InfoModalProps> = ({ isOpen, onClose }) => {
                 <div className="w-10 h-10 rounded-lg bg-[#1E3A8A] flex items-center justify-center">
                   <Info className="w-5 h-5 text-[#60A5FA]" />
                 </div>
-                <h3 className="text-lg font-bold text-white">About Spring Valley Roofing</h3>
+                <h3 id="info-modal-title" className="text-lg font-bold text-white">About Spring Valley Roofing</h3>
               </div>
-              <button onClick={onClose} className="text-[#94A3B8] hover:text-white transition-colors">
+              <button 
+                onClick={onClose} 
+                className="min-h-[44px] min-w-[44px] flex items-center justify-center text-[#94A3B8] hover:text-white transition-colors cursor-pointer rounded-lg hover:bg-[#1E293B]"
+                aria-label="Close information dialog"
+              >
                 <X className="w-5 h-5" />
               </button>
             </div>

@@ -461,6 +461,9 @@ export const StreetViewModal: React.FC<StreetViewModalProps> = ({
           }}
         >
           <motion.div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="streetview-modal-title"
             initial={{ scale: 0.96, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.96, opacity: 0 }}
@@ -474,7 +477,7 @@ export const StreetViewModal: React.FC<StreetViewModalProps> = ({
                   <MapPin className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+                  <h3 id="streetview-modal-title" className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
                     Google Street View Capture
                     <span className="text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded bg-[#18A9D9]/20 text-[#18A9D9] border border-[#18A9D9]/30">
                       Live
@@ -699,13 +702,21 @@ export const StreetViewModal: React.FC<StreetViewModalProps> = ({
                     </div>
                   </div>
 
-                  {/* Viewfinder Bounding Box with Corner Reticle Brackets */}
+                  {/* Viewfinder Bounding Box with Corner Reticles */}
                   <div className="relative w-[85%] h-[80%] max-w-[700px] border border-white/20 rounded-2xl shadow-[0_0_0_9999px_rgba(0,0,0,0.30)] flex flex-col justify-between p-3.5">
-                    {/* Corner Brackets */}
-                    <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-[#18A9D9] rounded-tl-xl -mt-0.5 -ml-0.5" />
-                    <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-[#18A9D9] rounded-tr-xl -mt-0.5 -mr-0.5" />
-                    <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-[#18A9D9] rounded-bl-xl -mb-0.5 -ml-0.5" />
-                    <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-[#18A9D9] rounded-br-xl -mb-0.5 -mr-0.5" />
+                    {/* SVG Corner Reticles (Retina-crisp, no side-border clashes) */}
+                    <svg className="absolute top-1.5 left-1.5 w-4 h-4 text-[#18A9D9] pointer-events-none" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M1 12V3a2 2 0 0 1 2-2h9" />
+                    </svg>
+                    <svg className="absolute top-1.5 right-1.5 w-4 h-4 text-[#18A9D9] pointer-events-none" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M15 12V3a2 2 0 0 0-2-2H4" />
+                    </svg>
+                    <svg className="absolute bottom-1.5 left-1.5 w-4 h-4 text-[#18A9D9] pointer-events-none" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M1 4v9a2 2 0 0 0 2 2h9" />
+                    </svg>
+                    <svg className="absolute bottom-1.5 right-1.5 w-4 h-4 text-[#18A9D9] pointer-events-none" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M15 4v9a2 2 0 0 1-2 2H4" />
+                    </svg>
 
                     {/* Center Crosshair */}
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-40">

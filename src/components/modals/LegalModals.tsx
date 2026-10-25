@@ -19,6 +19,9 @@ export const TermsOfUseModal: React.FC<LegalModalProps> = ({ isOpen, onClose }) 
           onClick={onClose}
         >
           <motion.div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="terms-title"
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.95, opacity: 0 }}
@@ -27,10 +30,14 @@ export const TermsOfUseModal: React.FC<LegalModalProps> = ({ isOpen, onClose }) 
           >
             <div className="p-5 border-b border-[#1E293B] flex justify-between items-center shrink-0">
               <div>
-                <h3 className="text-base font-bold text-white">Terms of Use</h3>
+                <h3 id="terms-title" className="text-base font-bold text-white">Terms of Use</h3>
                 <p className="text-[10px] text-[#64748B] mt-0.5">Spring Valley Roofing — Effective January 2026</p>
               </div>
-              <button onClick={onClose} className="text-[#94A3B8] hover:text-white transition-colors">
+              <button 
+                onClick={onClose} 
+                className="min-h-[44px] min-w-[44px] flex items-center justify-center text-[#94A3B8] hover:text-white transition-colors cursor-pointer rounded-lg hover:bg-[#1E293B]"
+                aria-label="Close terms of use modal"
+              >
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -100,6 +107,9 @@ export const PrivacyPolicyModal: React.FC<LegalModalProps> = ({ isOpen, onClose 
           onClick={onClose}
         >
           <motion.div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="privacy-title"
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.95, opacity: 0 }}
@@ -108,10 +118,14 @@ export const PrivacyPolicyModal: React.FC<LegalModalProps> = ({ isOpen, onClose 
           >
             <div className="p-5 border-b border-[#1E293B] shrink-0 flex justify-between items-center bg-[#0F172A]">
               <div>
-                <h3 className="text-base font-bold text-white">Privacy Policy</h3>
+                <h3 id="privacy-title" className="text-base font-bold text-white">Privacy Policy</h3>
                 <p className="text-[10px] text-[#64748B] mt-0.5">Spring Valley Roofing — Effective January 2026</p>
               </div>
-              <button onClick={onClose} className="text-[#475569] hover:text-white transition-colors">
+              <button 
+                onClick={onClose} 
+                className="min-h-[44px] min-w-[44px] flex items-center justify-center text-[#94A3B8] hover:text-white transition-colors cursor-pointer rounded-lg hover:bg-[#1E293B]"
+                aria-label="Close privacy policy modal"
+              >
                 <X className="w-5 h-5" />
               </button>
             </div>

@@ -107,6 +107,9 @@ const QuoteModal: React.FC<QuoteModalProps> = ({ isOpen, onClose, leadCaptureEna
         >
           <motion.div
             key="quote-modal-panel"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="quote-modal-title"
             initial={{ scale: 0.95, opacity: 0, y: 24 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 24 }}
             transition={{ type: 'spring', stiffness: 300, damping: 28 }}
             className="bg-[#0F172A] border border-[#1E293B] rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col"
@@ -115,11 +118,15 @@ const QuoteModal: React.FC<QuoteModalProps> = ({ isOpen, onClose, leadCaptureEna
             {/* Modal Header */}
             <div className="bg-[#0A0E17] border-b border-[#1E293B] px-6 py-4 flex items-center justify-between shrink-0">
               <div>
-                <div className="text-xs font-bold text-[#60A5FA] uppercase tracking-widest">Spring Valley Roofing</div>
-                <div className="text-base font-bold text-[#E2E8F0] mt-0.5">Request a Free Quote</div>
+                <div className="text-xs font-bold text-[#18A9D9] uppercase tracking-widest">BlueprintEnvision · CertainTeed® Partner</div>
+                <h3 id="quote-modal-title" className="text-base font-bold text-[#E2E8F0] mt-0.5">Request a Free Quote</h3>
               </div>
-              <button onClick={handleClose} className="p-2 rounded-full text-[#64748B] hover:text-white hover:bg-[#1E293B] transition-colors">
-                <X className="w-4 h-4" />
+              <button 
+                onClick={handleClose} 
+                className="p-2 min-h-[44px] min-w-[44px] rounded-full text-[#94A3B8] hover:text-white hover:bg-[#1E293B] transition-colors flex items-center justify-center cursor-pointer"
+                aria-label="Close quote request modal"
+              >
+                <X className="w-5 h-5" />
               </button>
             </div>
 
