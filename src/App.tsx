@@ -13,6 +13,7 @@ import {
 // Components
 import Header from './components/common/Header';
 import Footer from './components/common/Footer';
+import Landing from './Landing';
 import QuoteModal from './components/modals/QuoteModal';
 import { TermsOfUseModal as TermsModal, PrivacyPolicyModal as PrivacyModal } from './components/modals/LegalModals';
 import InfoModal from './components/modals/InfoModal';
@@ -50,7 +51,7 @@ const ADVANCED_ENABLED = true; // set true to re-enable Advanced Mode tab
 
 const App: React.FC = () => {
   // --- CORE STATE ---
-  const [mainView, setMainView] = useState<'studio' | 'field'>('studio');
+  const [mainView, setMainView] = useState<'studio' | 'field' | 'overview'>('studio');
   const [appMode, setAppMode] = useState<'quick' | 'advanced'>('quick');
   const [exteriorType, setExteriorType] = useState<'siding' | 'roofing'>(SIDING_ENABLED ? 'siding' : 'roofing');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -325,6 +326,22 @@ const App: React.FC = () => {
       ai.setIsProcessing(false);
     }
   };
+
+  if (mainView === 'overview') {
+    return (
+      <div className="min-h-screen text-[#E2E8F0] font-sans antialiased overflow-x-hidden bg-transparent" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+        <Header 
+          hasImage={false} 
+          onStartOver={handleStartOver} 
+          onQuoteClick={() => setShowQuoteModal(true)}
+          isQuoteAvailable={false}
+          mainView={mainView}
+          onViewChange={setMainView}
+        />
+        <Landing onLaunchStudio={() => setMainView('studio')} />
+      </div>
+    );
+  }
 
   if (mainView === 'field') {
     const activeSiding = quickZones[0]?.selectedColor?.name || 'Monogram Flagstone';

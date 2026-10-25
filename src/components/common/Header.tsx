@@ -8,8 +8,8 @@ interface HeaderProps {
   onStartOver: () => void;
   onQuoteClick: () => void;
   isQuoteAvailable: boolean;
-  mainView?: 'studio' | 'field';
-  onViewChange?: (view: 'studio' | 'field') => void;
+  mainView?: 'studio' | 'field' | 'overview';
+  onViewChange?: (view: 'studio' | 'field' | 'overview') => void;
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -54,7 +54,7 @@ const Header: React.FC<HeaderProps> = ({
             src={`${base}assets/logo.png`} 
             alt="Spring Valley Roofing" 
             className="h-8 sm:h-9 w-auto max-w-[190px] object-contain drop-shadow-[0_2px_10px_rgba(24,169,217,0.3)] cursor-pointer" 
-            onClick={() => onViewChange && onViewChange('studio')}
+            onClick={() => onViewChange && onViewChange('overview')}
             onError={(e) => { e.currentTarget.style.display = 'none'; }}
           />
           <div className="hidden lg:flex flex-col min-w-0 border-l border-[#223448] pl-3">
@@ -68,8 +68,20 @@ const Header: React.FC<HeaderProps> = ({
         {onViewChange && (
           <div className="flex items-center bg-[#131F2E] border border-[#223448] rounded-xl p-1 shadow-inner shrink-0">
             <button
+              onClick={() => onViewChange('overview')}
+              className={`min-h-[40px] px-2 sm:px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 touch-manipulation ${
+                mainView === 'overview'
+                  ? 'bg-[#3B82F6] text-white shadow-[0_0_14px_rgba(59,130,246,0.4)]'
+                  : 'text-[#9BA8B8] hover:text-white'
+              }`}
+            >
+              <span>✨</span>
+              <span className="hidden md:inline">Overview</span>
+              <span className="md:hidden text-[11px]">Overview</span>
+            </button>
+            <button
               onClick={() => onViewChange('studio')}
-              className={`min-h-[44px] px-2.5 sm:px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 touch-manipulation ${
+              className={`min-h-[40px] px-2 sm:px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 touch-manipulation ${
                 mainView === 'studio'
                   ? 'bg-[#18A9D9] text-white shadow-[0_0_14px_rgba(24,169,217,0.4)]'
                   : 'text-[#9BA8B8] hover:text-white'
@@ -81,7 +93,7 @@ const Header: React.FC<HeaderProps> = ({
             </button>
             <button
               onClick={() => onViewChange('field')}
-              className={`min-h-[44px] px-2.5 sm:px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 touch-manipulation ${
+              className={`min-h-[40px] px-2 sm:px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 touch-manipulation ${
                 mainView === 'field'
                   ? 'bg-[#83C248] text-white shadow-[0_0_14px_rgba(131,194,72,0.4)]'
                   : 'text-[#9BA8B8] hover:text-white'

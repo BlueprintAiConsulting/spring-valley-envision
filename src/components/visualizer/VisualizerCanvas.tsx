@@ -262,10 +262,49 @@ const VisualizerCanvas: React.FC<VisualizerCanvasProps> = ({
             </div>
           </motion.div>
         ) : (
-          <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center text-center p-12">
-            <div className="w-24 h-24 bg-[#0F172A] rounded-2xl border border-[#1E293B] flex items-center justify-center mb-8 shadow-inner rotate-3"><ImageIcon className="w-10 h-10 text-[#334155]" /></div>
-            <h4 className="text-sm font-bold uppercase tracking-[0.2em] mb-3 text-[#E2E8F0]">No Asset Detected</h4>
-            <p className="text-[#94A3B8] text-xs font-medium max-w-xs leading-relaxed mb-6">Please upload a site photograph to begin.</p>
+          <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-full h-full p-4 flex flex-col justify-center items-center relative overflow-hidden">
+            <div className="relative w-full max-w-2xl aspect-[16/10] rounded-2xl overflow-hidden border border-[#223448] shadow-2xl bg-[#0A0E17]">
+              <img
+                src={`${import.meta.env.BASE_URL || '/'}demo-render-charcoal.png`}
+                alt="Architectural Preview"
+                className="w-full h-full object-cover filter brightness-[0.65] contrast-[1.05]"
+                onError={(e) => { e.currentTarget.src = `${import.meta.env.BASE_URL || '/'}demo-pa-colonial.png`; }}
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#060B18] via-[#060B18]/40 to-transparent" />
+
+              {/* Floating Hotspot 1 */}
+              <div className="absolute top-[28%] left-[48%] -translate-x-1/2 flex items-center gap-2">
+                <span className="w-3.5 h-3.5 rounded-full bg-[#3B82F6] border-2 border-white shadow-[0_0_12px_#3B82F6] animate-pulse" />
+                <div className="arc-hotspot px-2.5 py-1 rounded-lg text-[9px] font-bold text-white border border-white/20 shadow-lg">
+                  Landmark® Moire Black
+                </div>
+              </div>
+
+              {/* Floating Hotspot 2 */}
+              <div className="absolute top-[58%] left-[28%] flex items-center gap-2">
+                <span className="w-3.5 h-3.5 rounded-full bg-[#18A9D9] border-2 border-white shadow-[0_0_12px_#18A9D9] animate-pulse" />
+                <div className="arc-hotspot px-2.5 py-1 rounded-lg text-[9px] font-bold text-white border border-white/20 shadow-lg">
+                  Monogram® Flagstone Gray
+                </div>
+              </div>
+
+              {/* Center Guidance Overlay */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center z-10">
+                <div className="w-12 h-12 rounded-2xl bg-[#0B131E]/90 border border-[#223448] flex items-center justify-center mb-3 shadow-xl">
+                  <ImageIcon className="w-6 h-6 text-[#18A9D9]" />
+                </div>
+                <h4 className="font-serif-editorial text-2xl font-normal text-white mb-1.5">
+                  Ready to Visualize Your Exterior
+                </h4>
+                <p className="text-[#94A3B8] text-xs font-light max-w-sm leading-relaxed mb-4">
+                  Select a sample home from the catalog, upload a driveway photo, or pull your property instantly from Google Street View.
+                </p>
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#18A9D9]/15 border border-[#18A9D9]/30 text-[10px] font-bold text-[#18A9D9]">
+                  <Sparkles className="w-3 h-3" />
+                  <span>CertainTeed Landmark® & Monogram® AI Pipeline</span>
+                </div>
+              </div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
