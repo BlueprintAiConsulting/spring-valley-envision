@@ -48,18 +48,23 @@ const Header: React.FC<HeaderProps> = ({
     <header className="border-b border-[#18A9D9]/20 bg-[#0B131E]/95 backdrop-blur-md sticky top-0 z-20 shadow-[0_1px_24px_rgba(24,169,217,0.08)]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-2">
         
-        {/* Brand — logo */}
-        <div className="flex items-center gap-3 min-w-0">
+        {/* Brand — Blueprint Envision Logo */}
+        <div 
+          className="flex items-center gap-3 min-w-0 cursor-pointer select-none group"
+          onClick={() => onViewChange && onViewChange('overview')}
+        >
           <img 
-            src={`${base}assets/logo.png`} 
-            alt="Spring Valley Roofing" 
-            className="h-8 sm:h-9 w-auto max-w-[190px] object-contain drop-shadow-[0_2px_10px_rgba(24,169,217,0.3)] cursor-pointer" 
-            onClick={() => onViewChange && onViewChange('overview')}
+            src={`${base}logo-mark.png`} 
+            alt="Blueprint" 
+            className="h-8 sm:h-9 w-auto rounded-lg object-contain drop-shadow-[0_0_12px_rgba(59,130,246,0.6)] group-hover:scale-105 transition-transform" 
             onError={(e) => { e.currentTarget.style.display = 'none'; }}
           />
-          <div className="hidden lg:flex flex-col min-w-0 border-l border-[#223448] pl-3">
-            <span className="text-[10px] uppercase tracking-[0.2em] font-bold whitespace-nowrap text-[#18A9D9]">
-              CertainTeed® Visualizer
+          <div className="flex flex-col min-w-0">
+            <span className="font-extrabold text-sm sm:text-base tracking-tight text-white flex items-center leading-none">
+              BLUEPRINT<span className="text-[#3B82F6]">ENVISION</span>
+            </span>
+            <span className="text-[8px] sm:text-[9px] uppercase tracking-[0.22em] font-semibold text-[#18A9D9] mt-0.5 whitespace-nowrap">
+              Exterior Visualizer
             </span>
           </div>
         </div>

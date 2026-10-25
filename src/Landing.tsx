@@ -243,19 +243,21 @@ export default function Landing({ onLaunchStudio }: LandingProps) {
       <header className="sticky top-0 z-50 bg-[#060B18]/85 backdrop-blur-xl border-b border-[#1E293B]/70 transition-all">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           
-          {/* Brand Wordmark & Contractor Logo */}
-          <div className="flex items-center gap-3 cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+          {/* Brand Wordmark & Blueprint Logo */}
+          <div className="flex items-center gap-3 cursor-pointer select-none group" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
             <img
-              src={`${base}assets/logo.png`}
-              alt="Spring Valley Roofing"
-              className="h-9 sm:h-10 w-auto object-contain drop-shadow-[0_2px_12px_rgba(24,169,217,0.3)]"
+              src={`${base}logo-mark.png`}
+              alt="Blueprint"
+              className="h-9 sm:h-10 w-auto rounded-xl object-contain drop-shadow-[0_0_16px_rgba(59,130,246,0.5)] group-hover:scale-105 transition-transform"
               onError={(e) => { e.currentTarget.style.display = 'none'; }}
             />
-            <div className="hidden sm:flex flex-col border-l border-[#223448] pl-3">
-              <span className="text-[10px] uppercase tracking-[0.25em] font-extrabold text-[#18A9D9]">
+            <div className="flex flex-col">
+              <span className="font-extrabold text-base tracking-tight text-white flex items-center leading-none">
+                BLUEPRINT<span className="text-[#3B82F6]">ENVISION</span>
+              </span>
+              <span className="text-[9px] uppercase tracking-[0.25em] font-semibold text-[#18A9D9] mt-1">
                 CertainTeed® Visualizer
               </span>
-              <span className="text-[9px] text-[#64748B]">Powered by Blueprint AI</span>
             </div>
           </div>
 
